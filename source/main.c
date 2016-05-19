@@ -11,7 +11,7 @@
 	GX_TRANSFER_SCALING(GX_TRANSFER_SCALE_NO))
 
 typedef struct { float x, y, z; } vertex;
-typedef struct { int x, y, x2, y2; } intrect;
+typedef struct { int x, y, w, h; } intrect;
 static int depthLevel = 0; // one square
 #define sqr_count (1<<(3*depthLevel))
 #define tri_count (sqr_count*2)
@@ -36,12 +36,12 @@ void addSquare(vertex* vtx, int* arrayPos, intrect bounding) {
 	
 	topLeft.x = bounding.x;
 	topLeft.y = bounding.y;
-	topRight.x = bounding.x2;
+	topRight.x = bounding.x + bounding.w;
 	topRight.y = bounding.y;
 	bottomLeft.x = bounding.x;
-	bottomLeft.y = bounding.y2;
-	bottomRight.x = bounding.x2;
-	bottomRight.y = bounding.y2;
+	bottomLeft.y = bounding.y + bounding.h;
+	bottomRight.x = bounding.x + bounding.w;
+	bottomRight.y = bounding.y + bounding.h;
 	
 	//tri 1
 	vtx[*arrayPos] = topLeft;
