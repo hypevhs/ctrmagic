@@ -11,8 +11,9 @@
 	GX_TRANSFER_SCALING(GX_TRANSFER_SCALE_NO))
 
 typedef struct { float x, y, z; } vertex;
-static int depthLevel = 1; // one hole
-#define tri_count (16 << (depthLevel - 1))
+static int depthLevel = 0; // one square
+#define sqr_count (1<<(3*depthLevel))
+#define tri_count (sqr_count*2)
 #define vtx_count (tri_count*3)
 
 static DVLB_s* vshader_dvlb;
