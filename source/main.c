@@ -125,12 +125,12 @@ int main()
 		bool dirty = false;
 		if (kDown & KEY_RIGHT)
 		{
-			rightX += 2f;
+			rightX += 2.0f;
 			dirty = true;
 		}
 		if (kDown & KEY_LEFT)
 		{
-			rightX -= 2f;
+			rightX -= 2.0f;
 			dirty = true;
 		}
 
