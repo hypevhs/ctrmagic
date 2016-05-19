@@ -11,15 +11,10 @@
 	GX_TRANSFER_SCALING(GX_TRANSFER_SCALE_NO))
 
 typedef struct { float x, y, z; } vertex;
-
-static const vertex vertex_list[] =
-{
-	{ 200.0f, 200.0f, 0.5f },
-	{ 100.0f, 40.0f, 0.5f },
-	{ 300.0f, 40.0f, 0.5f },
-};
-
-#define vertex_list_count (sizeof(vertex_list)/sizeof(vertex_list[0]))
+//static int depthLevel = 1; // one hole
+#define tri_count 1
+//                     16 << (depthLevel - 1); // 16^x
+#define vtx_count (tri_count*3)
 
 static DVLB_s* vshader_dvlb;
 static shaderProgram_s program;
@@ -52,8 +47,18 @@ static void sceneInit(void)
 	Mtx_OrthoTilt(&projection, 0.0, 400.0, 0.0, 240.0, 0.0, 1.0);
 
 	// Create the VBO (vertex buffer object)
-	vbo_data = linearAlloc(sizeof(vertex_list));
-	memcpy(vbo_data, vertex_list, sizeof(vertex_list));
+	vertex vtx[vtx_count];
+	vtx[0].x = 200.0f;
+	vtx[0].y = 200.0f;
+	vtx[0].z = 0.5f;
+	vtx[1].x = 100.0f;
+	vtx[1].y = 40.0f;
+	vtx[1].z = 0.5f;
+	vtx[2].x = 300.0f;
+	vtx[2].y = 40.0f;
+	vtx[2].z = 0.5f;
+	vbo_data = linearAlloc(sizeof(vtx));
+	memcpy(vbo_data, vtx, sizeof(vtx));
 
 	// Configure buffers
 	C3D_BufInfo* bufInfo = C3D_GetBufInfo();
@@ -74,7 +79,7 @@ static void sceneRender(void)
 	C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_projection, &projection);
 
 	// Draw the VBO
-	C3D_DrawArrays(GPU_TRIANGLES, 0, vertex_list_count);
+	C3D_DrawArrays(GPU_TRIANGLES, 0, vtx_count);
 }
 
 static void sceneExit(void)
