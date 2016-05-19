@@ -160,10 +160,10 @@ int main()
 
 		// Respond to user input
 		u32 kDown = hidKeysDown();
+		u32 kHeld = hidKeysHeld();
 		if (kDown & KEY_START)
 			break; // break in order to return to hbmenu
 
-		u32 kHeld = hidKeysHeld();
 		bool dirty = false;
 		if (kHeld & KEY_RIGHT)
 		{
@@ -173,6 +173,18 @@ int main()
 		if (kHeld & KEY_LEFT)
 		{
 			rightX -= 2.0f;
+			dirty = true;
+		}
+		if (kDown & KEY_A)
+		{
+			depthLevel++;
+			dirty = true;
+		}
+		if (kDown & KEY_B)
+		{
+			depthLevel--;
+			if (depthLevel < 0)
+				depthLevel = 0;
 			dirty = true;
 		}
 
