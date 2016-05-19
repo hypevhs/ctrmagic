@@ -22,6 +22,23 @@ static C3D_Mtx projection;
 
 static void* vbo_data;
 
+static float rightX = 300.0f;
+
+static void regenVbo() {
+	//top, left, right
+	vertex vtx[vtx_count];
+	vtx[0].x = 200.0f;
+	vtx[0].y = 200.0f;
+	vtx[0].z = 0.5f;
+	vtx[1].x = 100.0f;
+	vtx[1].y = 40.0f;
+	vtx[1].z = 0.5f;
+	vtx[2].x = rightX;
+	vtx[2].y = 40.0f;
+	vtx[2].z = 0.5f;
+	memcpy(vbo_data, vtx, sizeof(vtx));
+}
+
 static void sceneInit(void)
 {
 	// Load the vertex shader, create a shader program and bind it
@@ -46,18 +63,8 @@ static void sceneInit(void)
 	Mtx_OrthoTilt(&projection, 0.0, 400.0, 0.0, 240.0, 0.0, 1.0);
 
 	// Create the VBO (vertex buffer object)
-	vertex vtx[vtx_count];
-	vtx[0].x = 200.0f;
-	vtx[0].y = 200.0f;
-	vtx[0].z = 0.5f;
-	vtx[1].x = 100.0f;
-	vtx[1].y = 40.0f;
-	vtx[1].z = 0.5f;
-	vtx[2].x = 300.0f;
-	vtx[2].y = 40.0f;
-	vtx[2].z = 0.5f;
-	vbo_data = linearAlloc(sizeof(vtx));
-	memcpy(vbo_data, vtx, sizeof(vtx));
+	vbo_data = linearAlloc(vtx_count * sizeof(vertex)); //initial size
+	regenVbo();
 
 	// Configure buffers
 	C3D_BufInfo* bufInfo = C3D_GetBufInfo();
@@ -115,7 +122,22 @@ int main()
 		if (kDown & KEY_START)
 			break; // break in order to return to hbmenu
 
+		bool dirty = false;
+		if (kDown & KEY_RIGHT)
+		{
+			rightX += 2f;
+			dirty = true;
+		}
+		if (kDown & KEY_LEFT)
+		{
+			rightX -= 2f;
+			dirty = true;
+		}
+
 		// Render the scene
+		if (dirty)
+			regenVbo();
+
 		C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
 			C3D_FrameDrawOn(target);
 			sceneRender();
