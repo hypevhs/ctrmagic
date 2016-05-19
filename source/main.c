@@ -122,13 +122,14 @@ int main()
 		if (kDown & KEY_START)
 			break; // break in order to return to hbmenu
 
+		u32 kHeld = hidKeysHeld();
 		bool dirty = false;
-		if (kDown & KEY_RIGHT)
+		if (kHeld & KEY_RIGHT)
 		{
 			rightX += 2.0f;
 			dirty = true;
 		}
-		if (kDown & KEY_LEFT)
+		if (kHeld & KEY_LEFT)
 		{
 			rightX -= 2.0f;
 			dirty = true;
