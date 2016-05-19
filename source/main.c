@@ -11,6 +11,7 @@
 	GX_TRANSFER_SCALING(GX_TRANSFER_SCALE_NO))
 
 typedef struct { float x, y, z; } vertex;
+typedef struct { int x, y, x2, y2; } intrect;
 static int depthLevel = 0; // one square
 #define sqr_count (1<<(3*depthLevel))
 #define tri_count (sqr_count*2)
@@ -23,20 +24,59 @@ static C3D_Mtx projection;
 
 static void* vbo_data;
 
-static float rightX = 300.0f;
+static int rightX = 80;
+
+void addSquare(vertex* vtx, int* arrayPos, intrect bounding) {
+	float theZee = 0.5f;
+	vertex topLeft, topRight, bottomLeft, bottomRight;
+	topLeft.z = theZee;
+	topRight.z = theZee;
+	bottomLeft.z = theZee;
+	bottomRight.z = theZee;
+	
+	topLeft.x = bounding.x;
+	topLeft.y = bounding.y;
+	topRight.x = bounding.x2;
+	topRight.y = bounding.y;
+	bottomLeft.x = bounding.x;
+	bottomLeft.y = bounding.y2;
+	bottomRight.x = bounding.x2;
+	bottomRight.y = bounding.y2;
+	
+	//tri 1
+	vtx[*arrayPos] = topLeft;
+	(*arrayPos)++;
+	vtx[*arrayPos] = bottomLeft;
+	(*arrayPos)++;
+	vtx[*arrayPos] = topRight;
+	(*arrayPos)++;
+	//tri 2
+	vtx[*arrayPos] = topRight;
+	(*arrayPos)++;
+	vtx[*arrayPos] = bottomLeft;
+	(*arrayPos)++;
+	vtx[*arrayPos] = bottomRight;
+	(*arrayPos)++;
+}
+
+void doCarpet(vertex* vtx, int* arrayPos, intrect bounding, int level) {
+	if (level == depthLevel) {
+		//draw square
+		addSquare(vtx, arrayPos, bounding);
+	} else {
+		//recurse into 8 parts
+		//intrect child;
+		//ehhh we can do this later
+	}
+}
 
 static void regenVbo() {
 	//top, left, right
 	vertex vtx[vtx_count];
-	vtx[0].x = 200.0f;
-	vtx[0].y = 200.0f;
-	vtx[0].z = 0.5f;
-	vtx[1].x = 100.0f;
-	vtx[1].y = 40.0f;
-	vtx[1].z = 0.5f;
-	vtx[2].x = rightX;
-	vtx[2].y = 40.0f;
-	vtx[2].z = 0.5f;
+	int arrayPos = 0;
+	const intrect bounding = { rightX, 0, rightX+240, 240 };
+	doCarpet(vtx, &arrayPos, bounding, 0);
+	
 	memcpy(vbo_data, vtx, sizeof(vtx));
 
 	// Configure buffers
