@@ -37,6 +37,11 @@ static void regenVbo() {
 	vtx[2].y = 40.0f;
 	vtx[2].z = 0.5f;
 	memcpy(vbo_data, vtx, sizeof(vtx));
+	
+	// Configure buffers
+	C3D_BufInfo* bufInfo = C3D_GetBufInfo();
+	BufInfo_Init(bufInfo);
+	BufInfo_Add(bufInfo, vbo_data, sizeof(vertex), 1, 0x0);
 }
 
 static void sceneInit(void)
@@ -65,11 +70,6 @@ static void sceneInit(void)
 	// Create the VBO (vertex buffer object)
 	vbo_data = linearAlloc(vtx_count * sizeof(vertex)); //initial size
 	regenVbo();
-
-	// Configure buffers
-	C3D_BufInfo* bufInfo = C3D_GetBufInfo();
-	BufInfo_Init(bufInfo);
-	BufInfo_Add(bufInfo, vbo_data, sizeof(vertex), 1, 0x0);
 
 	// Configure the first fragment shading substage to just pass through the vertex color
 	// See https://www.opengl.org/sdk/docs/man2/xhtml/glTexEnv.xml for more insight
