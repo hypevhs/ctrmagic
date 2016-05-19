@@ -37,7 +37,7 @@ static void regenVbo() {
 	vtx[2].y = 40.0f;
 	vtx[2].z = 0.5f;
 	memcpy(vbo_data, vtx, sizeof(vtx));
-	
+
 	// Configure buffers
 	C3D_BufInfo* bufInfo = C3D_GetBufInfo();
 	BufInfo_Init(bufInfo);
