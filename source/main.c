@@ -74,7 +74,7 @@ static void regenVbo() {
 	//top, left, right
 	vertex vtx[vtx_count];
 	int arrayPos = 0;
-	const intrect bounding = { rightX, 0, rightX+240, 240 };
+	const intrect bounding = { rightX, 0, 240, 240 };
 	doCarpet(vtx, &arrayPos, bounding, 0);
 	
 	memcpy(vbo_data, vtx, sizeof(vtx));
