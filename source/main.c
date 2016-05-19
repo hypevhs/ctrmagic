@@ -59,14 +59,57 @@ void addSquare(vertex* vtx, int* arrayPos, intrect bounding) {
 	(*arrayPos)++;
 }
 
-void doCarpet(vertex* vtx, int* arrayPos, intrect bounding, int level) {
+void doCarpet(vertex* vtx, int* arrayPos, intrect bnd, int level) {
 	if (level == depthLevel) {
 		//draw square
-		addSquare(vtx, arrayPos, bounding);
+		addSquare(vtx, arrayPos, bnd);
 	} else {
 		//recurse into 8 parts
-		//intrect child;
-		//ehhh we can do this later
+		intrect child;
+		int newW = bnd.w / 3;
+		int newH = bnd.h / 3;
+		child.w = newW;
+		child.h = newH;
+
+		//topleft
+		child.x = bnd.x;
+		child.y = bnd.y;
+		doCarpet(vtx, arrayPos, child, level + 1);
+
+		//left
+		child.x = bnd.x;
+		child.y = bnd.y + newH;
+		doCarpet(vtx, arrayPos, child, level + 1);
+
+		//bottomleft
+		child.x = bnd.x;
+		child.y = bnd.y + newH + newH;
+		doCarpet(vtx, arrayPos, child, level + 1);
+
+		//top
+		child.x = bnd.x + newW;
+		child.y = bnd.y;
+		doCarpet(vtx, arrayPos, child, level + 1);
+		
+		//bottom
+		child.x = bnd.x + newW;
+		child.y = bnd.y + newH + newH;
+		doCarpet(vtx, arrayPos, child, level + 1);
+		
+		//topright
+		child.x = bnd.x + newW + newW;
+		child.y = bnd.y;
+		doCarpet(vtx, arrayPos, child, level + 1);
+		
+		//right
+		child.x = bnd.x + newW + newW;
+		child.y = bnd.y + newH;
+		doCarpet(vtx, arrayPos, child, level + 1);
+		
+		//bottomright
+		child.x = bnd.x + newW + newW;
+		child.y = bnd.y + newH + newH;
+		doCarpet(vtx, arrayPos, child, level + 1);
 	}
 }
 
