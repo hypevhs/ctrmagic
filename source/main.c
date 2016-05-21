@@ -243,6 +243,10 @@ int main()
 				depthLevel = 0;
 			dirty = true;
 		}
+		if (kDown & KEY_X)
+		{
+			printf("%lu\n", linearSpaceFree());
+		}
 
 		// Render the scene
 		if (dirty)
