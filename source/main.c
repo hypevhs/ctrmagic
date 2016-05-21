@@ -2,6 +2,7 @@
 #include <citro3d.h>
 #include <string.h>
 #include "vshader_shbin.h"
+#include <stdio.h>
 
 #define CLEAR_COLOR 0x68B0D8FF
 
@@ -194,6 +195,10 @@ int main()
 	// Initialize graphics
 	gfxInitDefault();
 	C3D_Init(C3D_DEFAULT_CMDBUF_SIZE);
+
+	// Init the console
+	consoleInit(GFX_BOTTOM, NULL);
+	printf("What's up?\n");
 
 	// Initialize the render target
 	C3D_RenderTarget* target = C3D_RenderTargetCreate(240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
