@@ -23,6 +23,7 @@ static int uLoc_projection;
 static C3D_Mtx projection;
 
 static void* vbo_data;
+static int current_vbo_count = -1;
 
 static int rightX = 80;
 
