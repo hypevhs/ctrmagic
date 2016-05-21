@@ -12,7 +12,7 @@
 	GX_TRANSFER_SCALING(GX_TRANSFER_SCALE_NO))
 
 typedef struct { float x, y, z; } vertex;
-typedef struct { int x, y, w, h; } intrect;
+typedef struct { u16 x, y, w, h; } intrect;
 static int depthLevel = 0; // one square
 #define sqr_count (1<<(3*depthLevel))
 #define tri_count (sqr_count*2)
