@@ -120,6 +120,13 @@ static void regenVbo() {
 	const intrect bounding = { rightX, 0, 240, 240 };
 	doCarpet(vtx, &arrayPos, bounding, 0);
 	
+	if (current_vbo_count != vtx_count)
+	{
+		linearFree(vbo_data);
+		vbo_data = linearAlloc(vtx_count * sizeof(vertex));
+		current_vbo_count = vtx_count;
+	}
+	
 	memcpy(vbo_data, vtx, sizeof(vtx));
 
 	// Configure buffers
@@ -152,7 +159,6 @@ static void sceneInit(void)
 	Mtx_OrthoTilt(&projection, 0.0, 400.0, 240.0, 0.0, 0.0, 1.0);
 
 	// Create the VBO (vertex buffer object)
-	vbo_data = linearAlloc(vtx_count * sizeof(vertex)); //initial size
 	regenVbo();
 
 	// Configure the first fragment shading substage to just pass through the vertex color
