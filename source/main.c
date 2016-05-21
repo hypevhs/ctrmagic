@@ -3,6 +3,7 @@
 #include <string.h>
 #include "vshader_shbin.h"
 #include <stdio.h>
+#include <math.h>
 
 #define CLEAR_COLOR 0x68B0D8FF
 
@@ -67,9 +68,9 @@ void doCarpet(vertex* vtx, int* arrayPos, intrect bnd, int level) {
 		addSquare(vtx, arrayPos, bnd);
 	} else {
 		//recurse into 8 parts
+		int newW = (int)ceil(bnd.w / 3.0);
+		int newH = (int)ceil(bnd.h / 3.0);
 		intrect child;
-		int newW = bnd.w / 3;
-		int newH = bnd.h / 3;
 		child.w = newW;
 		child.h = newH;
 
