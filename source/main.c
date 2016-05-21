@@ -116,12 +116,15 @@ void doCarpet(vertex* vtx, int* arrayPos, intrect bnd, int level) {
 	}
 }
 
+vertex* avtx;
+
 static void regenVbo() {
 	//top, left, right
-	vertex vtx[vtx_count];
+	linearFree(avtx);
+	avtx = linearAlloc(vtx_count * sizeof(vertex));
 	int arrayPos = 0;
 	const intrect bounding = { rightX, 0, 240, 240 };
-	doCarpet(vtx, &arrayPos, bounding, 0);
+	doCarpet(avtx, &arrayPos, bounding, 0);
 	
 	if (current_vbo_count != vtx_count)
 	{
@@ -130,7 +133,7 @@ static void regenVbo() {
 		current_vbo_count = vtx_count;
 	}
 	
-	memcpy(vbo_data, vtx, sizeof(vtx));
+	memcpy(vbo_data, avtx, vtx_count * sizeof(vertex));
 
 	// Configure buffers
 	C3D_BufInfo* bufInfo = C3D_GetBufInfo();
