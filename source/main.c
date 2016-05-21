@@ -256,6 +256,10 @@ int main()
 			C3D_FrameDrawOn(target);
 			sceneRender();
 		C3D_FrameEnd(0);
+		
+		gfxFlushBuffers();
+		gfxSwapBuffers();
+		gspWaitForVBlank();
 	}
 
 	// Deinitialize the scene
