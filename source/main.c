@@ -234,6 +234,7 @@ int main()
 		{
 			depthLevel++;
 			dirty = true;
+			printf("POW!\n");
 		}
 		if (kDown & KEY_B)
 		{
