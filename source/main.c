@@ -97,7 +97,7 @@ static C3D_Mtx material =
 
 static void* vbo_data;
 static C3D_Tex kitten_tex;
-static float angleX = 0.0, angleY = 0.0;
+static float angleX = 0.0, angleY = 0.0, angleZ = 0.0;
 
 static void sceneInit(void)
 {
@@ -156,10 +156,10 @@ static void sceneRender(int eye)
 	// Calculate the modelView matrix
 	C3D_Mtx modelView;
 	Mtx_Identity(&modelView);
-	Mtx_Translate(&modelView, 0.0, 0.0, -2.0 + 1.0*sinf(angleX));
-	//Mtx_Translate(&modelView, 0.0, 0.0, -1.2);
-	Mtx_RotateX(&modelView, angleX, true);
-	Mtx_RotateY(&modelView, angleY, true);
+	Mtx_Translate(&modelView, 0.0, 0.0, -1.5);
+	Mtx_RotateX(&modelView, angleX, false);
+	Mtx_RotateY(&modelView, angleY, false);
+	Mtx_RotateZ(&modelView, angleZ, false);
 
 	// Update the uniforms
 	C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_projection,   &projection);
@@ -218,19 +218,28 @@ int main()
 
 		// Respond to user input
 		u32 kDown = hidKeysDown();
+		u32 kHeld = hidKeysHeld();
 		if (kDown & KEY_START)
 			break; // break in order to return to hbmenu
 
-		if (kDown & KEY_A)
-		{
-		}
-		if (kDown & KEY_B)
-		{
-		}
+		circlePosition analog;
+		hidCircleRead(&analog);
+		if (analog.dx < 20 && analog.dx > -20) analog.dx = 0; //deadzones
+		if (analog.dy < 20 && analog.dy > -20) analog.dy = 0;
+		float howFarX = analog.dx / 160.0;
+		float howFarY = analog.dy / 160.0; //no idea why its max and min is this
+		float radsPerFrame = M_TAU / 90.0;
 
-		// update logic
-		angleX += M_PI / 180;
-		angleY += M_PI / 360;
+		if (kHeld & KEY_Y)
+		{
+			angleX += howFarX * radsPerFrame;
+			angleY += howFarY * radsPerFrame;
+		}
+		else
+		{
+			angleZ += howFarX * radsPerFrame;
+			angleY += howFarY * radsPerFrame;
+		}
 
 		// Render the scene twice
 		C3D_RenderBufBind(&rbLeft);
