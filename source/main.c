@@ -2,7 +2,8 @@
 #include <citro3d.h>
 #include <string.h>
 #include "vshader_shbin.h"
-#include "kitten_bin.h"
+//#include "kitten_bin.h"
+#include "lava512_bin.h"
 
 #define CLEAR_COLOR 0x68B0D8FF
 
@@ -130,9 +131,9 @@ static void sceneInit(void)
 	BufInfo_Add(bufInfo, vbo_data, sizeof(vertex), 3, 0x210);
 
 	// Load the texture and bind it to the first texture unit
-	C3D_TexInit(&kitten_tex, 64, 64, GPU_RGBA8);
-	C3D_TexUpload(&kitten_tex, kitten_bin);
-	C3D_TexSetFilter(&kitten_tex, GPU_LINEAR, GPU_NEAREST);
+	C3D_TexInit(&kitten_tex, 512, 512, GPU_RGBA8);
+	C3D_TexUpload(&kitten_tex, lava512_bin);
+	C3D_TexSetFilter(&kitten_tex, GPU_LINEAR , GPU_LINEAR);
 	C3D_TexBind(0, &kitten_tex);
 
 	// Configure the first fragment shading substage to blend the texture color with
@@ -154,6 +155,7 @@ static void sceneRender(int eye)
 	C3D_Mtx modelView;
 	Mtx_Identity(&modelView);
 	Mtx_Translate(&modelView, 0.0, 0.0, -2.0 + 1.0*sinf(angleX));
+	//Mtx_Translate(&modelView, 0.0, 0.0, -1.2);
 	Mtx_RotateX(&modelView, angleX, true);
 	Mtx_RotateY(&modelView, angleY, true);
 
@@ -241,7 +243,7 @@ int main()
 		C3D_RenderBufClear(&rbRight);
 
 		// Flush the framebuffers out of the data cache (not necessary with pure GPU rendering)
-		gfxFlushBuffers();
+		//gfxFlushBuffers();
 	}
 
 	// Deinitialize the scene
