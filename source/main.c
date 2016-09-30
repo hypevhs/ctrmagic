@@ -147,9 +147,10 @@ static void sceneInit(void)
 
 static void sceneRender(int eye)
 {
-	float iod = eye == 0 ? -0.2f : 0.2f;
+	float iod = osGet3DSliderState();
+	iod *= eye == 0 ? -0.2f : 0.2f;
 	// Compute the projection matrix
-	Mtx_PerspStereoTilt(&projection, 80.0f*M_PI/180.0f, 400.0f/240.0f, 0.01f, 1000.0f, iod, 1.0f);
+	Mtx_PerspStereoTilt(&projection, 80.0f*M_PI/180.0f, C3D_AspectRatioTop, 0.01f, 1000.0f, iod, 2.0f);
 
 	// Calculate the modelView matrix
 	C3D_Mtx modelView;
@@ -189,6 +190,7 @@ int main()
 	// Initialize graphics
 	gfxInitDefault();
 	C3D_Init(C3D_DEFAULT_CMDBUF_SIZE);
+	gfxSet3D(true);
 
 	// Initialize the renderbuffer
 	static C3D_RenderBuf rbLeft, rbRight;
@@ -216,11 +218,9 @@ int main()
 
 		if (kDown & KEY_A)
 		{
-			gfxSet3D(true);
 		}
 		if (kDown & KEY_B)
 		{
-			gfxSet3D(false);
 		}
 
 		// update logic
