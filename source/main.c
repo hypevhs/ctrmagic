@@ -120,9 +120,6 @@ static void sceneInit(void)
 	AttrInfo_AddLoader(attrInfo, 1, GPU_FLOAT, 2); // v1=texcoord
 	AttrInfo_AddLoader(attrInfo, 2, GPU_FLOAT, 3); // v2=normal
 
-	// Compute the projection matrix
-	Mtx_PerspTilt(&projection, 80.0f*M_PI/180.0f, 400.0f/240.0f, 0.01f, 1000.0f);
-
 	// Create the VBO (vertex buffer object)
 	vbo_data = linearAlloc(sizeof(vertex_list));
 	memcpy(vbo_data, vertex_list, sizeof(vertex_list));
@@ -147,18 +144,18 @@ static void sceneInit(void)
 	C3D_TexEnvFunc(env, C3D_Both, GPU_MODULATE);
 }
 
-static void sceneRender(void)
+static void sceneRender(int eye)
 {
+	float iod = eye == 0 ? -0.2f : 0.2f;
+	// Compute the projection matrix
+	Mtx_PerspStereoTilt(&projection, 80.0f*M_PI/180.0f, 400.0f/240.0f, 0.01f, 1000.0f, iod, 1.0f);
+
 	// Calculate the modelView matrix
 	C3D_Mtx modelView;
 	Mtx_Identity(&modelView);
-	Mtx_Translate(&modelView, 0.0, 0.0, -2.0 + 0.5*sinf(angleX));
+	Mtx_Translate(&modelView, 0.0, 0.0, -2.0 + 1.0*sinf(angleX));
 	Mtx_RotateX(&modelView, angleX, true);
 	Mtx_RotateY(&modelView, angleY, true);
-
-	// Rotate the cube each frame
-	angleX += M_PI / 180;
-	angleY += M_PI / 360;
 
 	// Update the uniforms
 	C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_projection,   &projection);
@@ -192,11 +189,13 @@ int main()
 	C3D_Init(C3D_DEFAULT_CMDBUF_SIZE);
 
 	// Initialize the renderbuffer
-	static C3D_RenderBuf rb;
-	C3D_RenderBufInit(&rb, 240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
-	rb.clearColor = CLEAR_COLOR;
-	C3D_RenderBufClear(&rb);
-	C3D_RenderBufBind(&rb);
+	static C3D_RenderBuf rbLeft, rbRight;
+	C3D_RenderBufInit(&rbLeft, 240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
+	C3D_RenderBufInit(&rbRight, 240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
+	rbLeft.clearColor = CLEAR_COLOR;
+	rbRight.clearColor = CLEAR_COLOR;
+	C3D_RenderBufClear(&rbLeft);
+	C3D_RenderBufClear(&rbRight);
 
 	// Initialize the scene
 	sceneInit();
@@ -204,20 +203,42 @@ int main()
 	// Main loop
 	while (aptMainLoop())
 	{
-		gspWaitForVBlank();  // Synchronize with the start of VBlank
-		gfxSwapBuffersGpu(); // Swap the framebuffers so that the frame that we rendered last frame is now visible
-		hidScanInput();      // Read the user input
+		gfxSwapBuffersGpu(); // Swap the framebuffers BEFORE waiting for vblank!!!
+		gspWaitForVBlank();  // wait for VBlank
+		hidScanInput();
 
 		// Respond to user input
 		u32 kDown = hidKeysDown();
 		if (kDown & KEY_START)
 			break; // break in order to return to hbmenu
 
-		// Render the scene
-		sceneRender();
+		if (kDown & KEY_A)
+		{
+			gfxSet3D(true);
+		}
+		if (kDown & KEY_B)
+		{
+			gfxSet3D(false);
+		}
+
+		// update logic
+		angleX += M_PI / 180;
+		angleY += M_PI / 360;
+
+		// Render the scene twice
+		C3D_RenderBufBind(&rbLeft);
+		sceneRender(0);
 		C3D_Flush();
-		C3D_RenderBufTransfer(&rb, (u32*)gfxGetFramebuffer(GFX_TOP, GFX_LEFT, NULL, NULL), DISPLAY_TRANSFER_FLAGS);
-		C3D_RenderBufClear(&rb);
+		u32* leftFrame = (u32*)gfxGetFramebuffer(GFX_TOP, GFX_LEFT, NULL, NULL);
+		C3D_RenderBufTransfer(&rbLeft, leftFrame, DISPLAY_TRANSFER_FLAGS);
+		C3D_RenderBufClear(&rbLeft);
+
+		C3D_RenderBufBind(&rbRight);
+		sceneRender(1);
+		C3D_Flush();
+		u32* rightFrame = (u32*)gfxGetFramebuffer(GFX_TOP, GFX_RIGHT, NULL, NULL);
+		C3D_RenderBufTransfer(&rbRight, rightFrame, DISPLAY_TRANSFER_FLAGS);
+		C3D_RenderBufClear(&rbRight);
 
 		// Flush the framebuffers out of the data cache (not necessary with pure GPU rendering)
 		gfxFlushBuffers();
