@@ -1,5 +1,6 @@
 #include <3ds.h>
 #include <citro3d.h>
+#include <stdio.h>
 #include <string.h>
 #include "vshader_shbin.h"
 //#include "kitten_bin.h"
@@ -191,6 +192,10 @@ int main()
 	gfxInitDefault();
 	C3D_Init(C3D_DEFAULT_CMDBUF_SIZE);
 	gfxSet3D(true);
+
+	// Init the console
+	consoleInit(GFX_BOTTOM, NULL);
+	printf("What's up?\n");
 
 	// Initialize the renderbuffer
 	static C3D_RenderBuf rbLeft, rbRight;
