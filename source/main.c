@@ -13,127 +13,29 @@
 	GX_TRANSFER_SCALING(GX_TRANSFER_SCALE_NO))
 
 typedef struct { float x, y, z; } vertex;
-typedef struct { u16 x, y, w, h; } intrect;
-static int depthLevel = 0; // one square
-#define sqr_count (1<<(3*depthLevel))
-#define tri_count (sqr_count*2)
-#define vtx_count (tri_count*3)
 
 static DVLB_s* vshader_dvlb;
 static shaderProgram_s program;
 static int uLoc_projection;
 static C3D_Mtx projection;
 
-static void* vbo_data;
-static int current_vbo_count = -1;
+static vertex* vbo_data = NULL;
+static int vtx_count = 3;
 
-static int rightX = 80;
+static void genVbo() {
+	vbo_data = (vertex *) linearAlloc(sizeof(vertex) * 3);
+	//ccw
+	vbo_data[0].x = 0;
+	vbo_data[0].y = 1;
+	vbo_data[0].z = 0.5;
 
-void addSquare(vertex* vtx, int* arrayPos, intrect bounding) {
-	float theZee = 0.5f;
-	vertex topLeft, topRight, bottomLeft, bottomRight;
-	topLeft.z = theZee;
-	topRight.z = theZee;
-	bottomLeft.z = theZee;
-	bottomRight.z = theZee;
-	
-	topLeft.x = bounding.x;
-	topLeft.y = bounding.y;
-	topRight.x = bounding.x + bounding.w;
-	topRight.y = bounding.y;
-	bottomLeft.x = bounding.x;
-	bottomLeft.y = bounding.y + bounding.h;
-	bottomRight.x = bounding.x + bounding.w;
-	bottomRight.y = bounding.y + bounding.h;
-	
-	//tri 1
-	vtx[*arrayPos] = topLeft;
-	(*arrayPos)++;
-	vtx[*arrayPos] = bottomLeft;
-	(*arrayPos)++;
-	vtx[*arrayPos] = topRight;
-	(*arrayPos)++;
-	//tri 2
-	vtx[*arrayPos] = topRight;
-	(*arrayPos)++;
-	vtx[*arrayPos] = bottomLeft;
-	(*arrayPos)++;
-	vtx[*arrayPos] = bottomRight;
-	(*arrayPos)++;
-}
+	vbo_data[1].x = -1;
+	vbo_data[1].y = -1;
+	vbo_data[1].z = 0.5;
 
-void doCarpet(vertex* vtx, int* arrayPos, intrect bnd, int level) {
-	if (level == depthLevel) {
-		//draw square
-		addSquare(vtx, arrayPos, bnd);
-	} else {
-		//recurse into 8 parts
-		int newW = (int)ceil(bnd.w / 3.0);
-		int newH = (int)ceil(bnd.h / 3.0);
-		intrect child;
-		child.w = newW;
-		child.h = newH;
-
-		//topleft
-		child.x = bnd.x;
-		child.y = bnd.y;
-		doCarpet(vtx, arrayPos, child, level + 1);
-
-		//left
-		child.x = bnd.x;
-		child.y = bnd.y + newH;
-		doCarpet(vtx, arrayPos, child, level + 1);
-
-		//bottomleft
-		child.x = bnd.x;
-		child.y = bnd.y + newH + newH;
-		doCarpet(vtx, arrayPos, child, level + 1);
-
-		//top
-		child.x = bnd.x + newW;
-		child.y = bnd.y;
-		doCarpet(vtx, arrayPos, child, level + 1);
-		
-		//bottom
-		child.x = bnd.x + newW;
-		child.y = bnd.y + newH + newH;
-		doCarpet(vtx, arrayPos, child, level + 1);
-		
-		//topright
-		child.x = bnd.x + newW + newW;
-		child.y = bnd.y;
-		doCarpet(vtx, arrayPos, child, level + 1);
-		
-		//right
-		child.x = bnd.x + newW + newW;
-		child.y = bnd.y + newH;
-		doCarpet(vtx, arrayPos, child, level + 1);
-		
-		//bottomright
-		child.x = bnd.x + newW + newW;
-		child.y = bnd.y + newH + newH;
-		doCarpet(vtx, arrayPos, child, level + 1);
-	}
-}
-
-vertex* avtx;
-
-static void regenVbo() {
-	//top, left, right
-	linearFree(avtx);
-	avtx = linearAlloc(vtx_count * sizeof(vertex));
-	int arrayPos = 0;
-	const intrect bounding = { rightX, 0, 240, 240 };
-	doCarpet(avtx, &arrayPos, bounding, 0);
-	
-	if (current_vbo_count != vtx_count)
-	{
-		linearFree(vbo_data);
-		vbo_data = linearAlloc(vtx_count * sizeof(vertex));
-		current_vbo_count = vtx_count;
-	}
-	
-	memcpy(vbo_data, avtx, vtx_count * sizeof(vertex));
+	vbo_data[2].x = 1;
+	vbo_data[2].y = -1;
+	vbo_data[2].z = 0.5;
 
 	// Configure buffers
 	C3D_BufInfo* bufInfo = C3D_GetBufInfo();
@@ -165,7 +67,7 @@ static void sceneInit(void)
 	Mtx_OrthoTilt(&projection, 0.0, 400.0, 240.0, 0.0, 0.0, 1.0);
 
 	// Create the VBO (vertex buffer object)
-	regenVbo();
+	genVbo();
 
 	// Configure the first fragment shading substage to just pass through the vertex color
 	// See https://www.opengl.org/sdk/docs/man2/xhtml/glTexEnv.xml for more insight
@@ -200,7 +102,7 @@ int main()
 	gfxInitDefault();
 	C3D_Init(C3D_DEFAULT_CMDBUF_SIZE);
 
-	// Init the console
+	// Init the console (NULL=default)
 	consoleInit(GFX_BOTTOM, NULL);
 	printf("What's up?\n");
 
@@ -226,41 +128,32 @@ int main()
 		bool dirty = false;
 		if (kHeld & KEY_RIGHT)
 		{
-			rightX += 2.0f;
-			dirty = true;
 		}
 		if (kHeld & KEY_LEFT)
 		{
-			rightX -= 2.0f;
-			dirty = true;
 		}
 		if (kDown & KEY_A)
 		{
-			depthLevel++;
-			dirty = true;
-			printf("POW! depthLevel is %d\n", depthLevel);
+			genVbo();
 		}
 		if (kDown & KEY_B)
 		{
-			depthLevel--;
-			if (depthLevel < 0)
-				depthLevel = 0;
-			dirty = true;
 		}
 		if (kDown & KEY_X)
 		{
-			printf("%lu\n", linearSpaceFree());
+			printf("linear free: %lu\nmappable free:%lu\n", linearSpaceFree(), mappableSpaceFree());
 		}
 
 		// Render the scene
 		if (dirty)
-			regenVbo();
+		{
+		}
 
 		C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
 			C3D_FrameDrawOn(target);
 			sceneRender();
 		C3D_FrameEnd(0);
-		
+
 		gfxFlushBuffers();
 		gfxSwapBuffers();
 		gspWaitForVBlank();
