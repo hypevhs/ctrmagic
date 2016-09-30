@@ -53,9 +53,12 @@ def png2tex():
                 r = pngRows[realY][realX*3]
                 g = pngRows[realY][realX*3+1]
                 b = pngRows[realY][realX*3+2]
+                a = 255
+                ba = struct.pack('B', a)
                 bb = struct.pack('B', b)
                 bg = struct.pack('B', g)
                 br = struct.pack('B', r)
+                fo.write(ba)
                 fo.write(bb)
                 fo.write(bg)
                 fo.write(br)
@@ -89,5 +92,5 @@ def DecodeMorton2Y(code):
     return Compact1By1(code >> 1)
 
 if __name__ == "__main__":
-    tex2png()
+    #tex2png()
     png2tex()
