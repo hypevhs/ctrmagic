@@ -3,8 +3,6 @@
 #include <stdio.h>
 #include <string.h>
 #include "vshader_shbin.h"
-//#include "kitten_bin.h"
-#include "lava512_bin.h"
 
 #define CLEAR_COLOR 0x68B0D8FF
 
@@ -99,6 +97,36 @@ static void* vbo_data;
 static C3D_Tex kitten_tex;
 static float angleX = 0.0, angleY = 0.0, angleZ = 0.0;
 
+FS_Archive sdmcArchive;
+
+Result fsinit() {
+    FS_Path archivePath = fsMakePath(PATH_EMPTY, "");
+    Result res = FSUSER_OpenArchive(&sdmcArchive, ARCHIVE_SDMC, archivePath);
+	printf("archive open result is = %li\n", res);
+	return res;
+}
+
+//returns size
+void fsopen(Handle* outFileHandle, u32* outSize, char* subPath) {
+	Result loadRes;
+    u64 fileSize;
+
+    FS_Path fsPath = fsMakePath(PATH_ASCII, subPath);
+	printf("made fspath\n");
+	loadRes = FSUSER_OpenFile(outFileHandle, sdmcArchive, fsPath, FS_OPEN_READ, 0);
+	printf("file open result is = %li\n", loadRes);
+	loadRes = FSFILE_GetSize(*outFileHandle, &fileSize);
+	printf("file size result is = %li\n", loadRes);
+	*outSize = (u32)fileSize;
+}
+
+Result fsread(Handle fileHandle, u32 size, char* intoBuf) {
+    u32 bytesRead;
+	Result res = FSFILE_Read(fileHandle, &bytesRead, 0, intoBuf, size);
+	printf("read result is = %li\n", res);
+	return res;
+}
+
 static void sceneInit(void)
 {
 	// Load the vertex shader, create a shader program and bind it
@@ -131,11 +159,21 @@ static void sceneInit(void)
 	BufInfo_Init(bufInfo);
 	BufInfo_Add(bufInfo, vbo_data, sizeof(vertex), 3, 0x210);
 
-	// Load the texture and bind it to the first texture unit
+	// Load the texture from file
+	Handle fsHandle;
+	u32 fsSize;
+	fsopen(&fsHandle, &fsSize, "/3ds/ctrmagic/lava512.bin");
+	char* buf = linearAlloc(sizeof(char) * fsSize);
+	fsread(fsHandle, fsSize, buf);
+
+	// and bind it to the first texture unit
 	C3D_TexInit(&kitten_tex, 512, 512, GPU_RGBA8);
-	C3D_TexUpload(&kitten_tex, lava512_bin);
+	C3D_TexUpload(&kitten_tex, buf);
 	C3D_TexSetFilter(&kitten_tex, GPU_LINEAR , GPU_LINEAR);
 	C3D_TexBind(0, &kitten_tex);
+
+	// free the texture file
+	linearFree(buf);
 
 	// Configure the first fragment shading substage to blend the texture color with
 	// the vertex color (calculated by the vertex shader using a lighting algorithm)
@@ -192,6 +230,9 @@ int main()
 	gfxInitDefault();
 	C3D_Init(C3D_DEFAULT_CMDBUF_SIZE);
 	gfxSet3D(true);
+
+	//init some other junk
+	fsinit();
 
 	// Init the console
 	consoleInit(GFX_BOTTOM, NULL);
