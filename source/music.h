@@ -10,16 +10,22 @@
 #include <libxmp-lite/xmp.h>
 #include "myfs.h"
 
-u16* soundBuf;
-char* moduleBuffer;
-xmp_context musicCtx;
+#define MUSIC_CHANNEL 0
 #define MUSIC_SAMPLE_RATE 44100
-#define MUSIC_BUF_SIZE (MUSIC_SAMPLE_RATE*1*2) //1 second * 2 for stereo
-#define MUSIC_CHANNEL 0x8
+#define MUSIC_BYTES_PER_SAMPLE 2 //16 bit samples. one channel
+#define MUSIC_BUF_LENGTH_SAMPLES (MUSIC_SAMPLE_RATE / 10) //sampling "runs" at 10fps. one channel
+#define MUSIC_BUF_LENGTH_BYTES (MUSIC_BUF_LENGTH_SAMPLES * MUSIC_BYTES_PER_SAMPLE) //one channel
+
+char* moduleBuffer; //mod file buffer
+xmp_context musicCtx; //handle to module player
+u32* audioBuffer; //raw 32bit audio buffer
+ndspWaveBuf waveBuf[2]; //dsp audio buffer for stereo channels
 
 Result musicinit();
 
-Result musicTick();
+void loadNewSamplesIntoSoundBuf(void* audioBufferL, void* audioBufferR);
+
+void musicTick();
 
 void musicFree();
 

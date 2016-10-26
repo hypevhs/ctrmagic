@@ -4,12 +4,12 @@ Result musicinit() {
 	Result res;
 	int xmpres;
 
-	//init csnd
-	res = csndInit();
-	printf("csndInit = %li\n", res);
+	//init dsp
+	res = ndspInit();
+	printf("ndspInit = %li\n", res);
 
 	//allocate buffer
-	soundBuf = linearAlloc(sizeof(u16) * MUSIC_BUF_SIZE);
+	audioBuffer = (u32*)linearAlloc(MUSIC_BUF_LENGTH_BYTES * 2);
 
 	//init xmp for playing .mod file
 	musicCtx = xmp_create_context();
@@ -26,33 +26,61 @@ Result musicinit() {
 	xmpres = xmp_start_player(musicCtx, MUSIC_SAMPLE_RATE, XMP_FORMAT_MONO);
 	printf("xmp start player = %i\n", xmpres);
 
+	//start dsp
+	ndspSetOutputMode(NDSP_OUTPUT_STEREO);
+	ndspChnSetInterp(MUSIC_CHANNEL, NDSP_INTERP_LINEAR);
+	ndspChnSetRate(MUSIC_CHANNEL, MUSIC_SAMPLE_RATE);
+	ndspChnSetFormat(MUSIC_CHANNEL, NDSP_FORMAT_STEREO_PCM16);
+	float mix[12];
+	memset(mix, 0, sizeof(mix));
+	mix[0] = 1.0;
+	mix[1] = 1.0;
+	ndspChnSetMix(MUSIC_CHANNEL, mix);
+
+	printf("Started dsp\n");
+
+	memset(waveBuf,0,sizeof(waveBuf));
+	waveBuf[0].data_vaddr = &audioBuffer[0];
+	waveBuf[0].nsamples = MUSIC_BUF_LENGTH_SAMPLES;
+	waveBuf[1].data_vaddr = &audioBuffer[MUSIC_BUF_LENGTH_SAMPLES];
+	waveBuf[1].nsamples = MUSIC_BUF_LENGTH_SAMPLES;
+
+	printf("made wavebufs\n");
+
 	return res;
 }
 
-Result musicTick() {
-	Result res;
+void loadNewSamplesIntoSoundBuf(void *audioBufferL, void *audioBufferR) {
 	int xmpres;
 
-	CSND_ChnInfo chanInfo;
-	res = csndGetState(MUSIC_CHANNEL, &chanInfo);
-	if (chanInfo.active) {
-		return 0; //wait until it's not active
-	}
-	printf("csnd state = %hhu ... %hi\n", chanInfo.active, chanInfo.adpcmSample);
+	s16 tempBuf[MUSIC_BUF_LENGTH_SAMPLES]; //holds the 16-bit samples, mono
 
-	//play mod into buffer
-	xmpres = xmp_play_buffer(musicCtx, soundBuf, MUSIC_BUF_SIZE, 0);
+	//xmp into soundBuf
+	xmpres = xmp_play_buffer(musicCtx, tempBuf, MUSIC_BUF_LENGTH_BYTES, 0);
 	printf("xmp play buffer = %i\n", xmpres);
 
-	//play buffer
-	res = csndPlaySound(MUSIC_CHANNEL, SOUND_ONE_SHOT | SOUND_FORMAT_16BIT, MUSIC_SAMPLE_RATE, 1.0, 0.0, soundBuf, NULL, MUSIC_BUF_SIZE);
-	printf("csndPlaySound = %li\n", res);
+	memcpy(audioBufferL, tempBuf, MUSIC_BUF_LENGTH_BYTES);
+	memcpy(audioBufferR, tempBuf, MUSIC_BUF_LENGTH_BYTES);
 
-	return res;
+	DSP_FlushDataCache(audioBufferL, MUSIC_BUF_LENGTH_BYTES);
+	DSP_FlushDataCache(audioBufferR, MUSIC_BUF_LENGTH_BYTES);
+}
+
+bool started = false;
+
+void musicTick() {
+	if (started == false || (waveBuf[0].status == NDSP_WBUF_DONE && waveBuf[0].status == NDSP_WBUF_DONE)) {
+		started = true;
+		loadNewSamplesIntoSoundBuf(waveBuf[0].data_pcm16, waveBuf[1].data_pcm16);
+
+		ndspChnWaveBufAdd(MUSIC_CHANNEL, &waveBuf[0]);
+		ndspChnWaveBufAdd(MUSIC_CHANNEL, &waveBuf[0]);
+	}
 }
 
 void musicFree() {
-	linearFree(soundBuf);
+	linearFree(audioBuffer);
 	linearFree(moduleBuffer);
-    csndExit();
+    ndspExit();
+    dspExit();
 }
