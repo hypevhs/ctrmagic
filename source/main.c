@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "vshader_shbin.h"
+#include "myfs.h"
 
 #define CLEAR_COLOR 0x68B0D8FF
 
@@ -96,36 +97,6 @@ static C3D_Mtx material =
 static void* vbo_data;
 static C3D_Tex kitten_tex;
 static float angleX = 0.0, angleY = 0.0, angleZ = 0.0;
-
-FS_Archive sdmcArchive;
-
-Result fsinit() {
-    FS_Path archivePath = fsMakePath(PATH_EMPTY, "");
-    Result res = FSUSER_OpenArchive(&sdmcArchive, ARCHIVE_SDMC, archivePath);
-	printf("archive open result is = %li\n", res);
-	return res;
-}
-
-//returns size
-void fsopen(Handle* outFileHandle, u32* outSize, char* subPath) {
-	Result loadRes;
-    u64 fileSize;
-
-    FS_Path fsPath = fsMakePath(PATH_ASCII, subPath);
-	printf("made fspath\n");
-	loadRes = FSUSER_OpenFile(outFileHandle, sdmcArchive, fsPath, FS_OPEN_READ, 0);
-	printf("file open result is = %li\n", loadRes);
-	loadRes = FSFILE_GetSize(*outFileHandle, &fileSize);
-	printf("file size result is = %li\n", loadRes);
-	*outSize = (u32)fileSize;
-}
-
-Result fsread(Handle fileHandle, u32 size, char* intoBuf) {
-    u32 bytesRead;
-	Result res = FSFILE_Read(fileHandle, &bytesRead, 0, intoBuf, size);
-	printf("read result is = %li\n", res);
-	return res;
-}
 
 static void sceneInit(void)
 {
