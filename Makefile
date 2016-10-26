@@ -48,13 +48,13 @@ CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++11
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=3dsx.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map) -Wl,--gc-sections
 
-LIBS	:= -lcitro3d -lctru -lm
+LIBS	:= -lcitro3d -lctru -lxmp-lite -lm
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
 # include and lib
 #---------------------------------------------------------------------------------
-LIBDIRS	:= $(CTRULIB) $(CURDIR)/../..
+LIBDIRS	:= $(CTRULIB) $(CURDIR)/../.. $(DEVKITPRO)/3ds_portlibs/libxmp-lite-4.3.10
 
 
 #---------------------------------------------------------------------------------
