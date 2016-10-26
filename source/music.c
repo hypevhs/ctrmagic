@@ -27,10 +27,10 @@ Result musicinit() {
 	printf("xmp start player = %i\n", xmpres);
 
 	//start dsp
-	ndspSetOutputMode(NDSP_OUTPUT_STEREO);
+	ndspSetOutputMode(NDSP_OUTPUT_MONO);
 	ndspChnSetInterp(MUSIC_CHANNEL, NDSP_INTERP_LINEAR);
 	ndspChnSetRate(MUSIC_CHANNEL, MUSIC_SAMPLE_RATE);
-	ndspChnSetFormat(MUSIC_CHANNEL, NDSP_FORMAT_STEREO_PCM16);
+	ndspChnSetFormat(MUSIC_CHANNEL, NDSP_FORMAT_MONO_PCM16);
 	float mix[12];
 	memset(mix, 0, sizeof(mix));
 	mix[0] = 1.0;
@@ -39,7 +39,7 @@ Result musicinit() {
 
 	printf("Started dsp\n");
 
-	memset(waveBuf,0,sizeof(waveBuf));
+	memset(waveBuf, 0, sizeof(waveBuf));
 	waveBuf[0].data_vaddr = &audioBuffer[0];
 	waveBuf[0].nsamples = MUSIC_BUF_LENGTH_SAMPLES;
 	waveBuf[1].data_vaddr = &audioBuffer[MUSIC_BUF_LENGTH_SAMPLES];
@@ -50,31 +50,27 @@ Result musicinit() {
 	return res;
 }
 
-void loadNewSamplesIntoSoundBuf(void *audioBufferL, void *audioBufferR) {
+void loadNewSamplesIntoSoundBuf(void *audioBuffer) {
 	int xmpres;
 
-	s16 tempBuf[MUSIC_BUF_LENGTH_SAMPLES]; //holds the 16-bit samples, mono
-
 	//xmp into soundBuf
-	xmpres = xmp_play_buffer(musicCtx, tempBuf, MUSIC_BUF_LENGTH_BYTES, 0);
+	xmpres = xmp_play_buffer(musicCtx, audioBuffer, MUSIC_BUF_LENGTH_BYTES, 0);
 	printf("xmp play buffer = %i\n", xmpres);
 
-	memcpy(audioBufferL, tempBuf, MUSIC_BUF_LENGTH_BYTES);
-	memcpy(audioBufferR, tempBuf, MUSIC_BUF_LENGTH_BYTES);
-
-	DSP_FlushDataCache(audioBufferL, MUSIC_BUF_LENGTH_BYTES);
-	DSP_FlushDataCache(audioBufferR, MUSIC_BUF_LENGTH_BYTES);
+	DSP_FlushDataCache(audioBuffer, MUSIC_BUF_LENGTH_BYTES);
 }
 
-bool started = false;
+int started = 0;
+bool audioSwap = false; //if true, we're doing work on the second buffer
 
 void musicTick() {
-	if (started == false || (waveBuf[0].status == NDSP_WBUF_DONE && waveBuf[0].status == NDSP_WBUF_DONE)) {
-		started = true;
-		loadNewSamplesIntoSoundBuf(waveBuf[0].data_pcm16, waveBuf[1].data_pcm16);
+	if (started < 2 || (waveBuf[audioSwap].status == NDSP_WBUF_DONE)) {
+		started++;
+		loadNewSamplesIntoSoundBuf(waveBuf[audioSwap].data_pcm16);
 
-		ndspChnWaveBufAdd(MUSIC_CHANNEL, &waveBuf[0]);
-		ndspChnWaveBufAdd(MUSIC_CHANNEL, &waveBuf[0]);
+		ndspChnWaveBufAdd(MUSIC_CHANNEL, &waveBuf[audioSwap]);
+
+		audioSwap = !audioSwap; //now we wait on the other buffer
 	}
 }
 
