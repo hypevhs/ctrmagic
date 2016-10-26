@@ -13,7 +13,7 @@
 #define MUSIC_CHANNEL 0
 #define MUSIC_SAMPLE_RATE 44100
 #define MUSIC_BYTES_PER_SAMPLE 2 //16 bit samples. one channel
-#define MUSIC_BUF_LENGTH_SAMPLES (MUSIC_SAMPLE_RATE / 30) //sampling "runs" at 10fps. one channel
+#define MUSIC_BUF_LENGTH_SAMPLES (MUSIC_SAMPLE_RATE / 20) //sampling "runs" at 20fps. one channel
 #define MUSIC_BUF_LENGTH_BYTES (MUSIC_BUF_LENGTH_SAMPLES * MUSIC_BYTES_PER_SAMPLE) //one channel
 
 char* moduleBuffer; //mod file buffer
