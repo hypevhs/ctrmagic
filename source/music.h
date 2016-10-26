@@ -10,7 +10,7 @@
 #include <libxmp-lite/xmp.h>
 #include "myfs.h"
 
-u32* soundBuf;
+u16* soundBuf;
 char* moduleBuffer;
 xmp_context musicCtx;
 #define MUSIC_SAMPLE_RATE 44100

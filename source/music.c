@@ -9,7 +9,7 @@ Result musicinit() {
 	printf("csndInit = %li\n", res);
 
 	//allocate buffer
-	soundBuf = linearAlloc(sizeof(u32) * MUSIC_BUF_SIZE);
+	soundBuf = linearAlloc(sizeof(u16) * MUSIC_BUF_SIZE);
 
 	//init xmp for playing .mod file
 	musicCtx = xmp_create_context();
@@ -45,7 +45,7 @@ Result musicTick() {
 	printf("xmp play buffer = %i\n", xmpres);
 
 	//play buffer
-	res = csndPlaySound(MUSIC_CHANNEL, SOUND_ONE_SHOT | SOUND_FORMAT_16BIT, MUSIC_SAMPLE_RATE, 1.0, 0.0, (u32*)soundBuf, NULL, MUSIC_BUF_SIZE);
+	res = csndPlaySound(MUSIC_CHANNEL, SOUND_ONE_SHOT | SOUND_FORMAT_16BIT, MUSIC_SAMPLE_RATE, 1.0, 0.0, soundBuf, NULL, MUSIC_BUF_SIZE);
 	printf("csndPlaySound = %li\n", res);
 
 	return res;
