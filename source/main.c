@@ -4,6 +4,7 @@
 #include <string.h>
 #include "vshader_shbin.h"
 #include "myfs.h"
+#include "music.h"
 
 #define CLEAR_COLOR 0x68B0D8FF
 
@@ -204,6 +205,7 @@ int main()
 
 	//init some other junk
 	fsinit();
+	musicinit();
 
 	// Init the console
 	consoleInit(GFX_BOTTOM, NULL);
@@ -278,5 +280,6 @@ int main()
 	// Deinitialize graphics
 	C3D_Fini();
 	gfxExit();
+	musicFree();
 	return 0;
 }
