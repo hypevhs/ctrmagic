@@ -228,6 +228,7 @@ int main()
 	{
 		gfxSwapBuffersGpu(); // Swap the framebuffers BEFORE waiting for vblank!!!
 		gspWaitForVBlank();  // wait for VBlank
+		musicTick(); //update music
 		hidScanInput();
 
 		// Respond to user input
