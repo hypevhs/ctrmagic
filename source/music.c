@@ -9,7 +9,7 @@ Result musicinit() {
 	printf("ndspInit = %li\n", res);
 
 	//allocate buffer
-	audioBuffer = (u32*)linearAlloc(MUSIC_BUF_LENGTH_BYTES * 2);
+	audioBuffer = (u32*)linearAlloc(MUSIC_BUF_LENGTH_BYTES * 2); //double buffering
 
 	//init xmp for playing .mod file
 	musicCtx = xmp_create_context();
@@ -23,14 +23,14 @@ Result musicinit() {
 
 	xmpres = xmp_load_module_from_memory(musicCtx, moduleBuffer, fsSize);
 	printf("xmp load module = %i\n", xmpres);
-	xmpres = xmp_start_player(musicCtx, MUSIC_SAMPLE_RATE, XMP_FORMAT_MONO);
+	xmpres = xmp_start_player(musicCtx, MUSIC_SAMPLE_RATE, 0);
 	printf("xmp start player = %i\n", xmpres);
 
 	//start dsp
-	ndspSetOutputMode(NDSP_OUTPUT_MONO);
+	ndspSetOutputMode(NDSP_OUTPUT_STEREO);
 	ndspChnSetInterp(MUSIC_CHANNEL, NDSP_INTERP_LINEAR);
 	ndspChnSetRate(MUSIC_CHANNEL, MUSIC_SAMPLE_RATE);
-	ndspChnSetFormat(MUSIC_CHANNEL, NDSP_FORMAT_MONO_PCM16);
+	ndspChnSetFormat(MUSIC_CHANNEL, NDSP_FORMAT_STEREO_PCM16);
 	float mix[12];
 	memset(mix, 0, sizeof(mix));
 	mix[0] = 1.0;
