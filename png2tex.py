@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # converts png files into rgba8 format (though it's really just ABGR ABGR ABGR)
+# that crazy morton encoding is only within 8x8 blocks of pixels, and then the
+# order of *those* blocks is how you'd expect: reading order.
 
 import png
 import struct
