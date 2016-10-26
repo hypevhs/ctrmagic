@@ -203,13 +203,13 @@ int main()
 	C3D_Init(C3D_DEFAULT_CMDBUF_SIZE);
 	gfxSet3D(true);
 
-	//init some other junk
-	fsinit();
-	musicinit();
-
 	// Init the console
 	consoleInit(GFX_BOTTOM, NULL);
 	printf("What's up?\n");
+
+	//init some other junk
+	fsinit();
+	musicinit();
 
 	// Initialize the renderbuffer
 	static C3D_RenderBuf rbLeft, rbRight;
