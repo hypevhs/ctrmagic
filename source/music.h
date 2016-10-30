@@ -7,10 +7,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <limits.h>
 #include <libxmp-lite/xmp.h>
 #include "myfs.h"
 
-#define MUSIC_CHANNEL 0
+#define MUSIC_CHANNEL 0x8
 #define MUSIC_SAMPLE_RATE 44100
 #define MUSIC_BYTES_PER_SAMPLE 4 //16 bit samples * stereo
 #define MUSIC_BUF_LENGTH_SAMPLES (MUSIC_SAMPLE_RATE / 20) //sampling "runs" at 20fps. one channel
@@ -23,7 +24,7 @@ ndspWaveBuf waveBuf[2]; //dsp audio buffer for stereo channels
 
 Result musicinit();
 
-void loadNewSamplesIntoSoundBuf(void* audioBuffer);
+void loadNewSamplesIntoSoundBuf(u32* audioBuffer);
 
 void musicTick();
 

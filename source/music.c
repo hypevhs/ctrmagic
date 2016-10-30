@@ -50,12 +50,25 @@ Result musicinit() {
 	return res;
 }
 
-void loadNewSamplesIntoSoundBuf(void *audioBuffer) {
-	int xmpres;
+s16 maxAmp = 0;
 
+void loadNewSamplesIntoSoundBuf(u32 *audioBuffer) {
 	//xmp into soundBuf
-	xmpres = xmp_play_buffer(musicCtx, audioBuffer, MUSIC_BUF_LENGTH_BYTES, 0);
-	printf("xmp play buffer = %i\n", xmpres);
+	xmp_play_buffer(musicCtx, audioBuffer, MUSIC_BUF_LENGTH_BYTES, 0);
+
+	for (int i = 0; i < MUSIC_BUF_LENGTH_SAMPLES; i++) {
+		u32* pcmRaw = &audioBuffer[i];
+		s16* pcmLR = (s16*)pcmRaw;
+
+		//update max amplitude
+		maxAmp = (s16)fmaxf(abs(pcmLR[0]), maxAmp);
+		maxAmp = (s16)fmaxf(abs(pcmLR[1]), maxAmp);
+
+		//scale volume by max amplitude
+		float volGain = SHRT_MAX / (maxAmp + 1);
+		pcmLR[0] *= volGain; //left speaker is LSB
+		pcmLR[1] *= volGain; //right speaker is MSB
+	}
 
 	DSP_FlushDataCache(audioBuffer, MUSIC_BUF_LENGTH_BYTES);
 }
@@ -66,7 +79,7 @@ bool audioSwap = false; //if true, we're doing work on the second buffer
 void musicTick() {
 	if (started < 2 || (waveBuf[audioSwap].status == NDSP_WBUF_DONE)) {
 		started++;
-		loadNewSamplesIntoSoundBuf(waveBuf[audioSwap].data_pcm16);
+		loadNewSamplesIntoSoundBuf((u32*)waveBuf[audioSwap].data_pcm16);
 
 		ndspChnWaveBufAdd(MUSIC_CHANNEL, &waveBuf[audioSwap]);
 
