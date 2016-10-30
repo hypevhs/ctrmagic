@@ -161,12 +161,14 @@ static void sceneRender(int eye)
 	float iod = osGet3DSliderState();
 	iod *= eye == 0 ? -0.2f : 0.2f;
 	// Compute the projection matrix
+	Mtx_Identity(&projection);
 	Mtx_PerspStereoTilt(&projection, 80.0f*M_PI/180.0f, C3D_AspectRatioTop, 0.01f, 1000.0f, iod, 2.0f, false);
+	Mtx_RotateX(&projection, M_PI / 4, true);
+	Mtx_Translate(&projection, 0, -5, -5, true);
 
 	// Calculate the modelView matrix
 	C3D_Mtx modelView;
 	Mtx_Identity(&modelView);
-	Mtx_Translate(&modelView, 0.0, 0.0, -1.5, true);
 	Mtx_RotateX(&modelView, angleX, true);
 	Mtx_RotateY(&modelView, angleY, true);
 	Mtx_RotateZ(&modelView, angleZ, true);
