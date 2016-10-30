@@ -80,6 +80,13 @@ static const vertex cube_vertex_list[] =
 
 #define cube_vertex_list_count (sizeof(cube_vertex_list)/sizeof(cube_vertex_list[0]))
 
+#define LANDSCAPE_TILE_SIZE 2 //WxH
+#define LANDSCAPE_TILE_COUNT (LANDSCAPE_TILE_SIZE*LANDSCAPE_TILE_SIZE)
+#define LANDSCAPE_TRIANGLE_COUNT (LANDSCAPE_TILE_COUNT*2)
+#define LANDSCAPE_VERTEX_COUNT (LANDSCAPE_TRIANGLE_COUNT*3)
+#define LANDSCAPE_VBO_SIZE (LANDSCAPE_VERTEX_COUNT*sizeof(vertex))
+static vertex landscape_vertex_list[LANDSCAPE_VERTEX_COUNT];
+
 static DVLB_s* vshader_dvlb;
 static shaderProgram_s program;
 static int uLoc_projection, uLoc_modelView;
@@ -98,6 +105,36 @@ static C3D_Mtx material =
 static void* vbo_data;
 static C3D_Tex kitten_tex;
 static float angleX = 0.0, angleY = 0.0, angleZ = 0.0;
+
+static void terrainGen() {
+	int n = (LANDSCAPE_TILE_SIZE + 1); //heightMapSize
+	float heightMap[n * n];
+	memset(heightMap, 0, sizeof(heightMap));
+
+	//todo: generate heightmap
+
+	int listIdx = 0;
+	for (int x = 0; x < LANDSCAPE_TILE_SIZE; x++)
+	{
+		for (int y = 0; y < LANDSCAPE_TILE_SIZE; y++)
+		{
+			//add TOPLEFT
+			landscape_vertex_list[listIdx++] = (vertex){{x, heightMap[y * n + x],             y}, {0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}};
+			//add TOPRIGHT
+			landscape_vertex_list[listIdx++] = (vertex){{x, heightMap[y * n + (x + 1)],       y}, {1.0f, 0.0f}, {0.0f, 1.0f, 0.0f}};
+			//add BOTTOMLEFT
+			landscape_vertex_list[listIdx++] = (vertex){{x, heightMap[(y + 1) * n + x],       y}, {0.0f, 1.0f}, {0.0f, 1.0f, 0.0f}};
+			//add BOTTOMLEFT
+			landscape_vertex_list[listIdx++] = (vertex){{x, heightMap[(y + 1) * n + x],       y}, {0.0f, 1.0f}, {0.0f, 1.0f, 0.0f}};
+			//add TOPRIGHT
+			landscape_vertex_list[listIdx++] = (vertex){{x, heightMap[y * n + (x + 1)],       y}, {1.0f, 0.0f}, {0.0f, 1.0f, 0.0f}};
+			//add BOTTOMRIGHT
+			landscape_vertex_list[listIdx++] = (vertex){{x, heightMap[(y + 1) * n + (x + 1)], y}, {1.0f, 1.0f}, {0.0f, 1.0f, 0.0f}};
+		}
+	}
+
+	printf("listIdx is %d and it should be %d\n", listIdx, LANDSCAPE_VERTEX_COUNT);
+}
 
 static void sceneInit(void)
 {
@@ -130,6 +167,9 @@ static void sceneInit(void)
 	C3D_BufInfo* bufInfo = C3D_GetBufInfo();
 	BufInfo_Init(bufInfo);
 	BufInfo_Add(bufInfo, vbo_data, sizeof(vertex), 3, 0x210);
+
+	//create the OTHER VBO
+	terrainGen();
 
 	// Load the texture from file
 	Handle fsHandle;
