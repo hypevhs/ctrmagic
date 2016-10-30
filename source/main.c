@@ -15,7 +15,7 @@
 
 typedef struct { float position[3]; float texcoord[2]; float normal[3]; } vertex;
 
-static const vertex vertex_list[] =
+static const vertex cube_vertex_list[] =
 {
 	// First face (PZ)
 	// First triangle
@@ -78,7 +78,7 @@ static const vertex vertex_list[] =
 	{ {-0.5f, -0.5f, -0.5f}, {0.0f, 0.0f}, {0.0f, -1.0f, 0.0f} },
 };
 
-#define vertex_list_count (sizeof(vertex_list)/sizeof(vertex_list[0]))
+#define cube_vertex_list_count (sizeof(cube_vertex_list)/sizeof(cube_vertex_list[0]))
 
 static DVLB_s* vshader_dvlb;
 static shaderProgram_s program;
@@ -123,8 +123,8 @@ static void sceneInit(void)
 	AttrInfo_AddLoader(attrInfo, 2, GPU_FLOAT, 3); // v2=normal
 
 	// Create the VBO (vertex buffer object)
-	vbo_data = linearAlloc(sizeof(vertex_list));
-	memcpy(vbo_data, vertex_list, sizeof(vertex_list));
+	vbo_data = linearAlloc(sizeof(cube_vertex_list));
+	memcpy(vbo_data, cube_vertex_list, sizeof(cube_vertex_list));
 
 	// Configure buffers
 	C3D_BufInfo* bufInfo = C3D_GetBufInfo();
@@ -180,7 +180,7 @@ static void sceneRender(int eye)
 	C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightClr,     1.0f, 1.0f,  1.0f, 1.0f);
 
 	// Draw the VBO
-	C3D_DrawArrays(GPU_TRIANGLES, 0, vertex_list_count);
+	C3D_DrawArrays(GPU_TRIANGLES, 0, cube_vertex_list_count);
 }
 
 static void sceneExit(void)
