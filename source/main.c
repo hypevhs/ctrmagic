@@ -171,12 +171,12 @@ static void sceneInit(void)
 	// Load the texture from file
 	Handle fsHandle;
 	u32 fsSize;
-	fsopen(&fsHandle, &fsSize, "/3ds/ctrmagic/lava512.bin");
+	fsopen(&fsHandle, &fsSize, "/3ds/ctrmagic/kitten.bin");
 	char* buf = linearAlloc(sizeof(char) * fsSize);
 	fsread(fsHandle, fsSize, buf);
 
 	// and bind it to the first texture unit
-	C3D_TexInit(&kitten_tex, 512, 512, GPU_RGBA8);
+	C3D_TexInit(&kitten_tex, 64, 64, GPU_RGBA8);
 	C3D_TexUpload(&kitten_tex, buf);
 	C3D_TexSetFilter(&kitten_tex, GPU_LINEAR , GPU_LINEAR);
 	C3D_TexBind(0, &kitten_tex);
