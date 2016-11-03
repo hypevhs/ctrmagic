@@ -111,6 +111,7 @@ static void terrainGen() {
 	memset(heightMap, 0, sizeof(heightMap));
 
 	//todo: generate heightmap
+	heightMap[4] = 0.5;
 
 	vbo_data = linearAlloc(LANDSCAPE_VBO_SIZE);
 	vertex* landscape_vertex_list = (vertex*)vbo_data;
@@ -119,10 +120,18 @@ static void terrainGen() {
 	{
 		for (int y = 0; y < LANDSCAPE_TILE_SIZE; y++)
 		{
-			vertex topLef = (vertex){{x, heightMap[y * n + x], y}, {0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}};
-			vertex botLef = (vertex){{x, heightMap[(y + 1) * n + x], y+1}, {0.0f, 1.0f}, {0.0f, 1.0f, 0.0f}};
-			vertex topRit = (vertex){{x+1, heightMap[y * n + (x + 1)], y}, {1.0f, 0.0f}, {0.0f, 1.0f, 0.0f}};
-			vertex botRit = (vertex){{x+1, heightMap[(y + 1) * n + (x + 1)], y+1}, {1.0f, 1.0f}, {0.0f, 1.0f, 0.0f}};
+			float realX0 = x / 2.0;
+			float realX1 = (x + 1) / 2.0;
+			float realY0 = y / 2.0;
+			float realY1 = (y + 1) / 2.0;
+			float mapTL = heightMap[y * n + x];
+			float mapBL = heightMap[(y + 1) * n + x];
+			float mapTR = heightMap[y * n + (x + 1)];
+			float mapBR = heightMap[(y + 1) * n + (x + 1)];
+			vertex topLef = (vertex){{realX0, mapTL, realY0}, {0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}};
+			vertex botLef = (vertex){{realX0, mapBL, realY1}, {0.0f, 1.0f}, {0.0f, 1.0f, 0.0f}};
+			vertex topRit = (vertex){{realX1, mapTR, realY0}, {1.0f, 0.0f}, {0.0f, 1.0f, 0.0f}};
+			vertex botRit = (vertex){{realX1, mapBR, realY1}, {1.0f, 1.0f}, {0.0f, 1.0f, 0.0f}};
 
 			landscape_vertex_list[listIdx++] = topLef;
 			landscape_vertex_list[listIdx++] = botLef;
