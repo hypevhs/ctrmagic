@@ -85,7 +85,6 @@ static const vertex cube_vertex_list[] =
 #define LANDSCAPE_TRIANGLE_COUNT (LANDSCAPE_TILE_COUNT*2)
 #define LANDSCAPE_VERTEX_COUNT (LANDSCAPE_TRIANGLE_COUNT*3)
 #define LANDSCAPE_VBO_SIZE (LANDSCAPE_VERTEX_COUNT*sizeof(vertex))
-static vertex landscape_vertex_list[LANDSCAPE_VERTEX_COUNT];
 
 static DVLB_s* vshader_dvlb;
 static shaderProgram_s program;
@@ -113,6 +112,8 @@ static void terrainGen() {
 
 	//todo: generate heightmap
 
+	vbo_data = linearAlloc(LANDSCAPE_VBO_SIZE);
+	vertex* landscape_vertex_list = (vertex*)vbo_data;
 	int listIdx = 0;
 	for (int x = 0; x < LANDSCAPE_TILE_SIZE; x++)
 	{
@@ -159,12 +160,8 @@ static void sceneInit(void)
 	AttrInfo_AddLoader(attrInfo, 1, GPU_FLOAT, 2); // v1=texcoord
 	AttrInfo_AddLoader(attrInfo, 2, GPU_FLOAT, 3); // v2=normal
 
-	//create the OTHER VBO
+	//create the terrain VBO
 	terrainGen();
-
-	// Create the VBO (vertex buffer object)
-	vbo_data = linearAlloc(sizeof(landscape_vertex_list));
-	memcpy(vbo_data, landscape_vertex_list, sizeof(landscape_vertex_list));
 
 	// Configure buffers
 	C3D_BufInfo* bufInfo = C3D_GetBufInfo();
