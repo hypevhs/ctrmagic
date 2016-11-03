@@ -203,8 +203,10 @@ static void sceneRender(int eye)
 	// Compute the projection matrix
 	Mtx_Identity(&projection);
 	Mtx_PerspStereoTilt(&projection, 80.0f*M_PI/180.0f, C3D_AspectRatioTop, 0.01f, 1000.0f, iod, 2.0f, false);
+
+	//for global camera
 	Mtx_RotateX(&projection, M_PI / 4, true);
-	Mtx_Translate(&projection, 0, -5, -5, true);
+	Mtx_Translate(&projection, 0, -2, -2, true);
 
 	// Calculate the modelView matrix
 	C3D_Mtx modelView;
@@ -217,9 +219,9 @@ static void sceneRender(int eye)
 	C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_projection,   &projection);
 	C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_modelView,    &modelView);
 	C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_material,     &material);
-	C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightVec,     0.0f, 0.0f, -1.0f, 0.0f);
-	C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightHalfVec, 0.0f, 0.0f, -1.0f, 0.0f);
-	C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightClr,     1.0f, 1.0f,  1.0f, 1.0f);
+	C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightVec,     0.0f, -1.0f, 0.0f, 1337.0f);
+	C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightHalfVec, 0.0f, -1.0f, 0.0f, 1337.0f);
+	C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightClr,     1.0f, 1.0f, 1.0f, 1337.0f);
 
 	// Draw the VBO
 	C3D_DrawArrays(GPU_TRIANGLES, 0, LANDSCAPE_VERTEX_COUNT);
