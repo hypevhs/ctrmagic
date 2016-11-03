@@ -118,18 +118,18 @@ static void terrainGen() {
 	{
 		for (int y = 0; y < LANDSCAPE_TILE_SIZE; y++)
 		{
-			//add TOPLEFT
-			landscape_vertex_list[listIdx++] = (vertex){{x, heightMap[y * n + x],             y}, {0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}};
-			//add TOPRIGHT
-			landscape_vertex_list[listIdx++] = (vertex){{x, heightMap[y * n + (x + 1)],       y}, {1.0f, 0.0f}, {0.0f, 1.0f, 0.0f}};
-			//add BOTTOMLEFT
-			landscape_vertex_list[listIdx++] = (vertex){{x, heightMap[(y + 1) * n + x],       y}, {0.0f, 1.0f}, {0.0f, 1.0f, 0.0f}};
-			//add BOTTOMLEFT
-			landscape_vertex_list[listIdx++] = (vertex){{x, heightMap[(y + 1) * n + x],       y}, {0.0f, 1.0f}, {0.0f, 1.0f, 0.0f}};
-			//add TOPRIGHT
-			landscape_vertex_list[listIdx++] = (vertex){{x, heightMap[y * n + (x + 1)],       y}, {1.0f, 0.0f}, {0.0f, 1.0f, 0.0f}};
-			//add BOTTOMRIGHT
-			landscape_vertex_list[listIdx++] = (vertex){{x, heightMap[(y + 1) * n + (x + 1)], y}, {1.0f, 1.0f}, {0.0f, 1.0f, 0.0f}};
+			vertex topLef = (vertex){{x, heightMap[y * n + x], y}, {0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}};
+			vertex botLef = (vertex){{x, heightMap[(y + 1) * n + x], y+1}, {0.0f, 1.0f}, {0.0f, 1.0f, 0.0f}};
+			vertex topRit = (vertex){{x+1, heightMap[y * n + (x + 1)], y}, {1.0f, 0.0f}, {0.0f, 1.0f, 0.0f}};
+			vertex botRit = (vertex){{x+1, heightMap[(y + 1) * n + (x + 1)], y+1}, {1.0f, 1.0f}, {0.0f, 1.0f, 0.0f}};
+
+			landscape_vertex_list[listIdx++] = topLef;
+			landscape_vertex_list[listIdx++] = botLef;
+			landscape_vertex_list[listIdx++] = topRit;
+
+			landscape_vertex_list[listIdx++] = topRit;
+			landscape_vertex_list[listIdx++] = botLef;
+			landscape_vertex_list[listIdx++] = botRit;
 		}
 	}
 
@@ -159,17 +159,17 @@ static void sceneInit(void)
 	AttrInfo_AddLoader(attrInfo, 1, GPU_FLOAT, 2); // v1=texcoord
 	AttrInfo_AddLoader(attrInfo, 2, GPU_FLOAT, 3); // v2=normal
 
+	//create the OTHER VBO
+	terrainGen();
+
 	// Create the VBO (vertex buffer object)
-	vbo_data = linearAlloc(sizeof(cube_vertex_list));
-	memcpy(vbo_data, cube_vertex_list, sizeof(cube_vertex_list));
+	vbo_data = linearAlloc(sizeof(landscape_vertex_list));
+	memcpy(vbo_data, landscape_vertex_list, sizeof(landscape_vertex_list));
 
 	// Configure buffers
 	C3D_BufInfo* bufInfo = C3D_GetBufInfo();
 	BufInfo_Init(bufInfo);
 	BufInfo_Add(bufInfo, vbo_data, sizeof(vertex), 3, 0x210);
-
-	//create the OTHER VBO
-	terrainGen();
 
 	// Load the texture from file
 	Handle fsHandle;
@@ -222,7 +222,7 @@ static void sceneRender(int eye)
 	C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightClr,     1.0f, 1.0f,  1.0f, 1.0f);
 
 	// Draw the VBO
-	C3D_DrawArrays(GPU_TRIANGLES, 0, cube_vertex_list_count);
+	C3D_DrawArrays(GPU_TRIANGLES, 0, LANDSCAPE_VERTEX_COUNT);
 }
 
 static void sceneExit(void)
