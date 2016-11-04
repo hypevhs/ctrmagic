@@ -136,10 +136,50 @@ static void terrainGen() {
 			vertex topRit = (vertex){{realX1, mapTR, realY0}, {1.0f, 0.0f}, {0.0f, 1.0f, 0.0f}};
 			vertex botRit = (vertex){{realX1, mapBR, realY1}, {1.0f, 1.0f}, {0.0f, 1.0f, 0.0f}};
 
+			//u = p2 - p1 (botLef - topLef)
+			float uA[3] = {
+				botLef.position[0] - topLef.position[0],
+				botLef.position[1] - topLef.position[1],
+				botLef.position[2] - topLef.position[2]
+			};
+			//v = p3 - p1 (topRit - topLef)
+			float vA[3] = {
+				topRit.position[0] - topLef.position[0],
+				topRit.position[1] - topLef.position[1],
+				topRit.position[2] - topLef.position[2]
+			};
+			float normA[3] = {
+				uA[1]*vA[2] - uA[2]*vA[1],
+				uA[2]*vA[0] - uA[0]*vA[2],
+				uA[0]*vA[1] - uA[1]*vA[0]
+			};
+			memcpy(topLef.normal, normA, 3*sizeof(float));
+			memcpy(botLef.normal, normA, 3*sizeof(float));
+			memcpy(topRit.normal, normA, 3*sizeof(float));
 			landscape_vertex_list[listIdx++] = topLef;
 			landscape_vertex_list[listIdx++] = botLef;
 			landscape_vertex_list[listIdx++] = topRit;
 
+			//u = p2 - p1 (botLef - topRit)
+			float uB[3] = {
+				botLef.position[0] - topRit.position[0],
+				botLef.position[1] - topRit.position[1],
+				botLef.position[2] - topRit.position[2]
+			};
+			//v = p3 - p1 (botRit - topRit)
+			float vB[3] = {
+				botRit.position[0] - topRit.position[0],
+				botRit.position[1] - topRit.position[1],
+				botRit.position[2] - topRit.position[2]
+			};
+			float normB[3] = {
+				uB[1]*vB[2] - uB[2]*vB[1],
+				uB[2]*vB[0] - uB[0]*vB[2],
+				uB[0]*vB[1] - uB[1]*vB[0]
+			};
+			memcpy(topLef.normal, normB, 3*sizeof(float));
+			memcpy(botLef.normal, normB, 3*sizeof(float));
+			memcpy(topRit.normal, normB, 3*sizeof(float));
 			landscape_vertex_list[listIdx++] = topRit;
 			landscape_vertex_list[listIdx++] = botLef;
 			landscape_vertex_list[listIdx++] = botRit;
