@@ -103,7 +103,8 @@ static C3D_Mtx material =
 
 static vertex* vboTerrain;
 static vertex* vboOrigin;
-static C3D_Tex kitten_tex;
+static C3D_Tex texKitten;
+static C3D_Tex texLava;
 static float angleX = 0.0, angleY = 0.0, angleZ = 0.0;
 
 static void terrainGen() {
@@ -189,6 +190,22 @@ static void terrainGen() {
 	printf("listIdx is %d and it should be %d\n", listIdx, LANDSCAPE_VERTEX_COUNT);
 }
 
+static void loadTexture(C3D_Tex* texStore, char* path, int size) {
+	Handle fsHandle;
+	u32 fsSize;
+
+	//load the texture from file
+	fsopen(&fsHandle, &fsSize, path);
+	char* buf = linearAlloc(sizeof(char) * fsSize);
+	fsread(fsHandle, fsSize, buf);
+	//load it into c3d
+	C3D_TexInit(texStore, size, size, GPU_RGBA8);
+	C3D_TexUpload(texStore, buf);
+	C3D_TexSetFilter(texStore, GPU_LINEAR, GPU_LINEAR);
+	//free resources
+	linearFree(buf);
+}
+
 static void sceneInit(void)
 {
 	// Load the vertex shader, create a shader program and bind it
@@ -218,21 +235,9 @@ static void sceneInit(void)
 	printf("made vboOrigin with %d bytes\n", cube_vertex_list_count * sizeof(vertex));
 	terrainGen();
 
-	// Load the texture from file
-	Handle fsHandle;
-	u32 fsSize;
-	fsopen(&fsHandle, &fsSize, "/3ds/ctrmagic/kitten.bin");
-	char* buf = linearAlloc(sizeof(char) * fsSize);
-	fsread(fsHandle, fsSize, buf);
-
-	// and bind it to the first texture unit
-	C3D_TexInit(&kitten_tex, 64, 64, GPU_RGBA8);
-	C3D_TexUpload(&kitten_tex, buf);
-	C3D_TexSetFilter(&kitten_tex, GPU_LINEAR , GPU_LINEAR);
-	C3D_TexBind(0, &kitten_tex);
-
-	// free the texture file
-	linearFree(buf);
+	//load textures from files
+	loadTexture(&texKitten, "/3ds/ctrmagic/kitten.bin", 64);
+	loadTexture(&texLava, "/3ds/ctrmagic/lava512.bin", 512);
 
 	// Configure the first fragment shading substage to blend the texture color with
 	// the vertex color (calculated by the vertex shader using a lighting algorithm)
@@ -273,6 +278,7 @@ static void sceneRender(int eye)
 	C3D_BufInfo bufInfo;
 
 	//draw terrain
+	C3D_TexBind(0, &texKitten);
 	BufInfo_Init(&bufInfo);
 	BufInfo_Add(&bufInfo, vboTerrain, sizeof(vertex), 3, 0x210);
 	C3D_SetBufInfo(&bufInfo);
@@ -282,6 +288,7 @@ static void sceneRender(int eye)
 	Mtx_Identity(&modelView);
 	C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_modelView,    &modelView);
 	//draw origin cube
+	C3D_TexBind(0, &texLava);
 	BufInfo_Init(&bufInfo);
 	BufInfo_Add(&bufInfo, vboOrigin, sizeof(vertex), 3, 0x210);
 	C3D_SetBufInfo(&bufInfo);
@@ -291,7 +298,8 @@ static void sceneRender(int eye)
 static void sceneExit(void)
 {
 	// Free the texture
-	C3D_TexDelete(&kitten_tex);
+	C3D_TexDelete(&texKitten);
+	C3D_TexDelete(&texLava);
 
 	// Free the VBO
 	linearFree(vboTerrain);
