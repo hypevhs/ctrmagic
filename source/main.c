@@ -260,20 +260,19 @@ static void sceneRender(int eye)
     Mtx_RotateX(&projection, M_PI / 4, true);
     Mtx_Translate(&projection, -camX, -camY, -camZ, true);
 
-    // Calculate the modelView matrix
-    C3D_Mtx modelView;
-    Mtx_Identity(&modelView);
-
     // Update the uniforms
     C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_projection,   &projection);
-    C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_modelView,    &modelView);
     C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_material,     &material);
     C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightVec,     0.0f, -1.0f, 0.0f, 1337.0f);
     C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightHalfVec, 0.0f, -1.0f, 0.0f, 1337.0f);
     C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightClr,     1.0f, 1.0f, 1.0f, 1337.0f);
 
     C3D_BufInfo bufInfo;
+    C3D_Mtx modelView;
 
+    //update modelview
+    Mtx_Identity(&modelView);
+    C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_modelView, &modelView);
     //draw terrain
     C3D_TexBind(0, &texKitten);
     BufInfo_Init(&bufInfo);
@@ -283,7 +282,7 @@ static void sceneRender(int eye)
 
     //update modelview
     Mtx_Identity(&modelView);
-    C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_modelView,    &modelView);
+    C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_modelView, &modelView);
     //draw origin cube
     C3D_TexBind(0, &texLava);
     BufInfo_Init(&bufInfo);
