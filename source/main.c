@@ -89,6 +89,7 @@ static const vertex cube_vertex_list[] =
 static DVLB_s* vshader_dvlb;
 static shaderProgram_s program;
 C3D_BufInfo* bufTerrain;
+C3D_BufInfo* bufOrigin;
 static int uLoc_projection, uLoc_modelView;
 static int uLoc_lightVec, uLoc_lightHalfVec, uLoc_lightClr, uLoc_material;
 static C3D_Mtx projection;
@@ -103,6 +104,7 @@ static C3D_Mtx material =
 };
 
 static vertex* vboTerrain;
+static vertex* vboOrigin;
 static C3D_Tex kitten_tex;
 static float angleX = 0.0, angleY = 0.0, angleZ = 0.0;
 
@@ -212,13 +214,21 @@ static void sceneInit(void)
 	AttrInfo_AddLoader(attrInfo, 1, GPU_FLOAT, 2); // v1=texcoord
 	AttrInfo_AddLoader(attrInfo, 2, GPU_FLOAT, 3); // v2=normal
 
-	//create the terrain VBO
+	//create the VBOs
+	vboOrigin = linearAlloc(cube_vertex_list_count * sizeof(vertex));
+	memcpy(vboOrigin, cube_vertex_list, cube_vertex_list_count * sizeof(vertex));
+	printf("made vboOrigin with %d bytes\n", cube_vertex_list_count * sizeof(vertex));
 	terrainGen();
 
 	// Configure buffers
+	bufOrigin = C3D_GetBufInfo();
+	BufInfo_Init(bufOrigin);
+	int idA = BufInfo_Add(bufOrigin, vboOrigin, sizeof(vertex), 3, 0x210);
+	printf("configured origin buffer=%d\n", idA);
 	bufTerrain = C3D_GetBufInfo();
 	BufInfo_Init(bufTerrain);
-	BufInfo_Add(bufTerrain, vboTerrain, sizeof(vertex), 3, 0x210);
+	int idB = BufInfo_Add(bufTerrain, vboTerrain, sizeof(vertex), 3, 0x210);
+	printf("configured terrain buffer=%d\n", idB);
 
 	// Load the texture from file
 	Handle fsHandle;
@@ -272,8 +282,16 @@ static void sceneRender(int eye)
 	C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightHalfVec, 0.0f, -1.0f, 0.0f, 1337.0f);
 	C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightClr,     1.0f, 1.0f, 1.0f, 1337.0f);
 
-	// Draw the VBO
+	//draw terrain
+	C3D_SetBufInfo(bufTerrain);
 	C3D_DrawArrays(GPU_TRIANGLES, 0, LANDSCAPE_VERTEX_COUNT);
+
+	//update modelview
+	Mtx_Identity(&modelView);
+	C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_modelView,    &modelView);
+	//draw origin cube
+	C3D_SetBufInfo(bufOrigin);
+	C3D_DrawArrays(GPU_TRIANGLES, 0, cube_vertex_list_count);
 }
 
 static void sceneExit(void)
@@ -283,6 +301,7 @@ static void sceneExit(void)
 
 	// Free the VBO
 	linearFree(vboTerrain);
+	linearFree(vboOrigin);
 
 	// Free the shader program
 	shaderProgramFree(&program);
