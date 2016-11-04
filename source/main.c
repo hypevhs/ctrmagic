@@ -88,8 +88,6 @@ static const vertex cube_vertex_list[] =
 
 static DVLB_s* vshader_dvlb;
 static shaderProgram_s program;
-C3D_BufInfo* bufTerrain;
-C3D_BufInfo* bufOrigin;
 static int uLoc_projection, uLoc_modelView;
 static int uLoc_lightVec, uLoc_lightHalfVec, uLoc_lightClr, uLoc_material;
 static C3D_Mtx projection;
@@ -220,16 +218,6 @@ static void sceneInit(void)
 	printf("made vboOrigin with %d bytes\n", cube_vertex_list_count * sizeof(vertex));
 	terrainGen();
 
-	// Configure buffers
-	bufOrigin = C3D_GetBufInfo();
-	BufInfo_Init(bufOrigin);
-	int idA = BufInfo_Add(bufOrigin, vboOrigin, sizeof(vertex), 3, 0x210);
-	printf("configured origin buffer=%d\n", idA);
-	bufTerrain = C3D_GetBufInfo();
-	BufInfo_Init(bufTerrain);
-	int idB = BufInfo_Add(bufTerrain, vboTerrain, sizeof(vertex), 3, 0x210);
-	printf("configured terrain buffer=%d\n", idB);
-
 	// Load the texture from file
 	Handle fsHandle;
 	u32 fsSize;
@@ -282,15 +270,21 @@ static void sceneRender(int eye)
 	C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightHalfVec, 0.0f, -1.0f, 0.0f, 1337.0f);
 	C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightClr,     1.0f, 1.0f, 1.0f, 1337.0f);
 
+	C3D_BufInfo bufInfo;
+
 	//draw terrain
-	C3D_SetBufInfo(bufTerrain);
+	BufInfo_Init(&bufInfo);
+	BufInfo_Add(&bufInfo, vboTerrain, sizeof(vertex), 3, 0x210);
+	C3D_SetBufInfo(&bufInfo);
 	C3D_DrawArrays(GPU_TRIANGLES, 0, LANDSCAPE_VERTEX_COUNT);
 
 	//update modelview
 	Mtx_Identity(&modelView);
 	C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_modelView,    &modelView);
 	//draw origin cube
-	C3D_SetBufInfo(bufOrigin);
+	BufInfo_Init(&bufInfo);
+	BufInfo_Add(&bufInfo, vboOrigin, sizeof(vertex), 3, 0x210);
+	C3D_SetBufInfo(&bufInfo);
 	C3D_DrawArrays(GPU_TRIANGLES, 0, cube_vertex_list_count);
 }
 
