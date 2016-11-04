@@ -105,7 +105,7 @@ static vertex* vboTerrain;
 static vertex* vboOrigin;
 static C3D_Tex texKitten;
 static C3D_Tex texLava;
-static float angleX = 0.0, angleY = 0.0, angleZ = 0.0;
+static float camX = 0.0, camY = 2.0, camZ = 2.0;
 
 static void terrainGen() {
     int n = (LANDSCAPE_TILE_SIZE + 1); //heightMapSize
@@ -258,14 +258,11 @@ static void sceneRender(int eye)
 
     //for global camera
     Mtx_RotateX(&projection, M_PI / 4, true);
-    Mtx_Translate(&projection, 0, -2, -2, true);
+    Mtx_Translate(&projection, -camX, -camY, -camZ, true);
 
     // Calculate the modelView matrix
     C3D_Mtx modelView;
     Mtx_Identity(&modelView);
-    Mtx_RotateX(&modelView, angleX, true);
-    Mtx_RotateY(&modelView, angleY, true);
-    Mtx_RotateZ(&modelView, angleZ, true);
 
     // Update the uniforms
     C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_projection,   &projection);
@@ -357,17 +354,17 @@ int main()
         if (analog.dy < 20 && analog.dy > -20) analog.dy = 0;
         float howFarX = analog.dx / 160.0;
         float howFarY = analog.dy / 160.0; //no idea why its max and min is this
-        float radsPerFrame = M_TAU / 90.0;
+        float unitsPerFrame = 0.03;
 
         if (kHeld & KEY_Y)
         {
-            angleX += howFarX * radsPerFrame;
-            angleY += howFarY * radsPerFrame;
+            camX += howFarX * unitsPerFrame;
+            camY += howFarY * unitsPerFrame;
         }
         else
         {
-            angleZ += howFarX * radsPerFrame;
-            angleY += howFarY * radsPerFrame;
+            camX += howFarX * unitsPerFrame;
+            camZ += -howFarY * unitsPerFrame;
         }
 
         // Render the scene twice
