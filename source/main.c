@@ -80,7 +80,7 @@ static const vertex cube_vertex_list[] =
 
 #define cube_vertex_list_count (sizeof(cube_vertex_list)/sizeof(cube_vertex_list[0]))
 
-#define LANDSCAPE_TILE_SIZE 2 //WxH
+#define LANDSCAPE_TILE_SIZE 10 //WxH
 #define LANDSCAPE_TILE_COUNT (LANDSCAPE_TILE_SIZE*LANDSCAPE_TILE_SIZE)
 #define LANDSCAPE_TRIANGLE_COUNT (LANDSCAPE_TILE_COUNT*2)
 #define LANDSCAPE_VERTEX_COUNT (LANDSCAPE_TRIANGLE_COUNT*3)
@@ -107,11 +107,14 @@ static float angleX = 0.0, angleY = 0.0, angleZ = 0.0;
 
 static void terrainGen() {
 	int n = (LANDSCAPE_TILE_SIZE + 1); //heightMapSize
-	float heightMap[n * n];
-	memset(heightMap, 0, sizeof(heightMap));
+	int hmSize = n * n;
+	float heightMap[hmSize];
+	memset(heightMap, 0, hmSize * sizeof(float));
 
 	//todo: generate heightmap
-	heightMap[4] = 0.5;
+	for (int hmidx = 0; hmidx < hmSize; hmidx++) {
+		heightMap[hmidx] = rand() / (float)RAND_MAX;
+	}
 
 	vbo_data = linearAlloc(LANDSCAPE_VBO_SIZE);
 	vertex* landscape_vertex_list = (vertex*)vbo_data;
