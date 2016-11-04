@@ -251,10 +251,10 @@ static void sceneInit(void)
 static void sceneRender(int eye)
 {
     float iod = osGet3DSliderState();
-    iod *= eye == 0 ? -0.2f : 0.2f;
+    iod *= eye == 0 ? -0.1f : 0.1f;
     // Compute the projection matrix
     Mtx_Identity(&projection);
-    Mtx_PerspStereoTilt(&projection, 80.0f*M_PI/180.0f, C3D_AspectRatioTop, 0.01f, 1000.0f, iod, 2.0f, false);
+    Mtx_PerspStereoTilt(&projection, 80.0f*M_PI/180.0f, C3D_AspectRatioTop, 0.01f, 1000.0f, iod, 5.0, false);
 
     //for global camera
     Mtx_RotateX(&projection, M_PI / 4, true);
