@@ -88,6 +88,7 @@ static const vertex cube_vertex_list[] =
 
 static DVLB_s* vshader_dvlb;
 static shaderProgram_s program;
+C3D_BufInfo* bufTerrain;
 static int uLoc_projection, uLoc_modelView;
 static int uLoc_lightVec, uLoc_lightHalfVec, uLoc_lightClr, uLoc_material;
 static C3D_Mtx projection;
@@ -101,7 +102,7 @@ static C3D_Mtx material =
 	}
 };
 
-static void* vbo_data;
+static vertex* vboTerrain;
 static C3D_Tex kitten_tex;
 static float angleX = 0.0, angleY = 0.0, angleZ = 0.0;
 
@@ -116,8 +117,7 @@ static void terrainGen() {
 		heightMap[hmidx] = rand() / (float)RAND_MAX;
 	}
 
-	vbo_data = linearAlloc(LANDSCAPE_VBO_SIZE);
-	vertex* landscape_vertex_list = (vertex*)vbo_data;
+	vboTerrain = linearAlloc(LANDSCAPE_VBO_SIZE);
 	int listIdx = 0;
 	for (int x = 0; x < LANDSCAPE_TILE_SIZE; x++)
 	{
@@ -156,9 +156,9 @@ static void terrainGen() {
 			memcpy(topLef.normal, normA, 3*sizeof(float));
 			memcpy(botLef.normal, normA, 3*sizeof(float));
 			memcpy(topRit.normal, normA, 3*sizeof(float));
-			landscape_vertex_list[listIdx++] = topLef;
-			landscape_vertex_list[listIdx++] = botLef;
-			landscape_vertex_list[listIdx++] = topRit;
+			vboTerrain[listIdx++] = topLef;
+			vboTerrain[listIdx++] = botLef;
+			vboTerrain[listIdx++] = topRit;
 
 			//u = p2 - p1 (botLef - topRit)
 			float uB[3] = {
@@ -180,9 +180,9 @@ static void terrainGen() {
 			memcpy(topLef.normal, normB, 3*sizeof(float));
 			memcpy(botLef.normal, normB, 3*sizeof(float));
 			memcpy(topRit.normal, normB, 3*sizeof(float));
-			landscape_vertex_list[listIdx++] = topRit;
-			landscape_vertex_list[listIdx++] = botLef;
-			landscape_vertex_list[listIdx++] = botRit;
+			vboTerrain[listIdx++] = topRit;
+			vboTerrain[listIdx++] = botLef;
+			vboTerrain[listIdx++] = botRit;
 		}
 	}
 
@@ -216,9 +216,9 @@ static void sceneInit(void)
 	terrainGen();
 
 	// Configure buffers
-	C3D_BufInfo* bufInfo = C3D_GetBufInfo();
-	BufInfo_Init(bufInfo);
-	BufInfo_Add(bufInfo, vbo_data, sizeof(vertex), 3, 0x210);
+	bufTerrain = C3D_GetBufInfo();
+	BufInfo_Init(bufTerrain);
+	BufInfo_Add(bufTerrain, vboTerrain, sizeof(vertex), 3, 0x210);
 
 	// Load the texture from file
 	Handle fsHandle;
@@ -282,7 +282,7 @@ static void sceneExit(void)
 	C3D_TexDelete(&kitten_tex);
 
 	// Free the VBO
-	linearFree(vbo_data);
+	linearFree(vboTerrain);
 
 	// Free the shader program
 	shaderProgramFree(&program);
