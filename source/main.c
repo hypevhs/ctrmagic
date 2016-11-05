@@ -111,7 +111,7 @@ static vertex* vboCastle;
 static u32 vboCastleLength;
 static C3D_Tex texKitten;
 static C3D_Tex texLava;
-static float camX = 0.0, camY = 2.0, camZ = 2.0, camRotX = M_PI / 4, camRotY = 0.0;
+static float camX = 4.0, camY = 4.0, camZ = 4.0, camRotX = M_PI / 4, camRotY = 0.0;
 
 static void terrainGen() {
     int n = (LANDSCAPE_TILE_SIZE + 1); //heightMapSize
@@ -196,6 +196,23 @@ static void terrainGen() {
     printf("listIdx is %d and it should be %d\n", listIdx, LANDSCAPE_VERTEX_COUNT);
 }
 
+static float randUnit() {
+    return rand() / (float)RAND_MAX;
+}
+
+static vertex newVert(float x, float y, float z) {
+    vertex v;
+    v.position[0] = x;
+    v.position[1] = y;
+    v.position[2] = z;
+    v.texcoord[0] = randUnit();
+    v.texcoord[1] = randUnit();
+    v.normal[0] = randUnit();
+    v.normal[1] = randUnit();
+    v.normal[2] = randUnit();
+    return v;
+}
+
 static void loadCastleObj() {
     tinyobj_attrib_t attrib;
     tinyobj_shape_t* shapes = NULL;
@@ -208,12 +225,6 @@ static void loadCastleObj() {
     fsopen(&fsHandle, &fsSize, "/3ds/ctrmagic/castle.obj");
     char* data = linearAlloc(sizeof(char) * fsSize);
     fsread(fsHandle, fsSize, data);
-    int idx = 0;
-    while (data[idx] != '\n') {
-        printf("%c", data[idx]);
-        idx++;
-    }
-    printf("\n");
 
     int ret = tinyobj_parse_obj(&attrib, &shapes, &num_shapes, &materials,
                                 &num_materials, data, fsSize, TINYOBJ_FLAG_TRIANGULATE);
@@ -222,67 +233,36 @@ static void loadCastleObj() {
         printf("could not load model!!1\n");
         return;
     }
-    printf("# of shapes    = %d\n", (int)num_shapes);
-    printf("# of materials = %d\n", (int)num_materials);
-    printf("# of verts     = %d\n", (int)attrib.num_vertices);
 
-    //assuming triangulated face
-    size_t num_triangles = attrib.num_face_num_verts;
-    vboCastleLength = num_triangles * 3;
+    printf("num_shapes    = %d\n", num_shapes);
+    printf("num_materials = %d\n", num_materials);
+    printf("num_vertices  = %d\n", attrib.num_vertices); //unique verts defined with "v"
+    printf("num_faces     = %d\n", attrib.num_faces); //misleading; see below
+    printf("num_face_num_v= %d\n", attrib.num_face_num_verts); //actual number of triangles to draw
+
+    //if using drawArrays, num_faces is vbo length. elseif using drawElements, it's the length of your index array
+    vboCastleLength = attrib.num_faces;
     vboCastle = (vertex*)linearAlloc(sizeof(vertex) * vboCastleLength);
 
-    size_t face_offset = 0;
-    u32 vertCtr = 0;
-    //for each face in the obj
-    for (int face = 0; face < attrib.num_face_num_verts; face++) {
-        assert(attrib.face_num_verts[face] % 3 == 0); /* assume all triangle faces. */
-        //for each triangle in the face
-        for (size_t tri = 0; tri < (size_t)attrib.face_num_verts[face] / 3; tri++) {
-            //get the indexes for this tri
-            tinyobj_vertex_index_t idx0 = attrib.faces[face_offset + 3 * tri + 0];
-            tinyobj_vertex_index_t idx1 = attrib.faces[face_offset + 3 * tri + 1];
-            tinyobj_vertex_index_t idx2 = attrib.faces[face_offset + 3 * tri + 2];
-            size_t f0 = idx0.v_idx; //idx v0
-            size_t f1 = idx1.v_idx; //idx v1
-            size_t f2 = idx2.v_idx; //idx v2
-            size_t n0 = idx0.vn_idx; //normals
-            size_t n1 = idx1.vn_idx; //normals
-            size_t n2 = idx2.vn_idx; //normals
-
-            float v0x = attrib.vertices[3 * f0 + 0];
-            float v0y = attrib.vertices[3 * f0 + 1];
-            float v0z = attrib.vertices[3 * f0 + 2];
-            float n0x = attrib.normals [3 * n0 + 0];
-            float n0y = attrib.normals [3 * n0 + 1];
-            float n0z = attrib.normals [3 * n0 + 2];
-            float u0x = 0.5; //v0x + v0z;
-            float u0y = 0.5; //v0y;
-            vboCastle[vertCtr++] = (vertex){ {v0x,v0y,v0z}, {u0x,u0y}, {n0x,n0y,n0z} };
-
-            float v1x = attrib.vertices[3 * f1 + 0];
-            float v1y = attrib.vertices[3 * f1 + 1];
-            float v1z = attrib.vertices[3 * f1 + 2];
-            float n1x = attrib.normals [3 * n1 + 0];
-            float n1y = attrib.normals [3 * n1 + 1];
-            float n1z = attrib.normals [3 * n1 + 2];
-            float u1x = 0.5; //v1x + v1z;
-            float u1y = 0.5; //v1y;
-            vboCastle[vertCtr++] = (vertex){ {v1x,v1y,v1z}, {u1x,u1y}, {n1x,n1y,n1z} };
-
-            float v2x = attrib.vertices[3 * f2 + 0];
-            float v2y = attrib.vertices[3 * f2 + 1];
-            float v2z = attrib.vertices[3 * f2 + 2];
-            float n2x = attrib.normals [3 * n2 + 0];
-            float n2y = attrib.normals [3 * n2 + 1];
-            float n2z = attrib.normals [3 * n2 + 2];
-            float u2x = 0.5; //v2x + v2z;
-            float u2y = 0.5; //v2y;
-            vboCastle[vertCtr++] = (vertex){ {v2x,v2y,v2z}, {u2x,u2y}, {n2x,n2y,n2z} };
-
-        }
-        face_offset += (size_t)attrib.face_num_verts[face];
+    //for each indexer in the indexArray
+    for (int ii = 0; ii < vboCastleLength; ii++) {
+        tinyobj_vertex_index_t v0 = attrib.faces[ii];
+        int indexed = v0.v_idx;
+        //get the vertex pos/norm/etc of wherever that indexer points to
+        float x = attrib.vertices[indexed * 3 + 0];
+        float y = attrib.vertices[indexed * 3 + 1];
+        float z = attrib.vertices[indexed * 3 + 2];
+        //and add it to vbo
+        vboCastle[ii] = newVert(x,y,z);
     }
-    printf("%lu should be %u\n", vertCtr, num_triangles * 3);
+    //reverse normals
+    if (1==0) {
+        for (int vIdx = 0; vIdx < vboCastleLength; vIdx += 3) {
+            vertex temp = vboCastle[vIdx];
+            vboCastle[vIdx] = vboCastle[vIdx+1];
+            vboCastle[vIdx+1] = temp;
+        }
+    }
 }
 
 static void loadTexture(C3D_Tex* texStore, char* path, int size) {
@@ -416,7 +396,7 @@ static void sceneRender(int eye)
 
     //update modelview
     Mtx_Identity(&modelView);
-    Mtx_Translate(&modelView, 2, 1, 2, true);
+    Mtx_Translate(&modelView, 2, 0, 2, true);
     C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_modelView, &modelView);
     //draw castle
     C3D_TexBind(0, &texKitten);
