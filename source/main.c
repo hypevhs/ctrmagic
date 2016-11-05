@@ -245,13 +245,16 @@ static void loadCastleObj() {
             size_t f0 = idx0.v_idx; //idx v0
             size_t f1 = idx1.v_idx; //idx v1
             size_t f2 = idx2.v_idx; //idx v2
+            size_t n0 = idx0.vn_idx; //normals
+            size_t n1 = idx1.vn_idx; //normals
+            size_t n2 = idx2.vn_idx; //normals
 
             float v0x = attrib.vertices[3 * f0 + 0];
             float v0y = attrib.vertices[3 * f0 + 1];
             float v0z = attrib.vertices[3 * f0 + 2];
-            float n0x = attrib.normals [3 * f0 + 0];
-            float n0y = attrib.normals [3 * f0 + 1];
-            float n0z = attrib.normals [3 * f0 + 2];
+            float n0x = attrib.normals [3 * n0 + 0];
+            float n0y = attrib.normals [3 * n0 + 1];
+            float n0z = attrib.normals [3 * n0 + 2];
             float u0x = 0.5; //v0x + v0z;
             float u0y = 0.5; //v0y;
             vboCastle[vertCtr++] = (vertex){ {v0x,v0y,v0z}, {u0x,u0y}, {n0x,n0y,n0z} };
@@ -259,9 +262,9 @@ static void loadCastleObj() {
             float v1x = attrib.vertices[3 * f1 + 0];
             float v1y = attrib.vertices[3 * f1 + 1];
             float v1z = attrib.vertices[3 * f1 + 2];
-            float n1x = attrib.normals [3 * f1 + 0];
-            float n1y = attrib.normals [3 * f1 + 1];
-            float n1z = attrib.normals [3 * f1 + 2];
+            float n1x = attrib.normals [3 * n1 + 0];
+            float n1y = attrib.normals [3 * n1 + 1];
+            float n1z = attrib.normals [3 * n1 + 2];
             float u1x = 0.5; //v1x + v1z;
             float u1y = 0.5; //v1y;
             vboCastle[vertCtr++] = (vertex){ {v1x,v1y,v1z}, {u1x,u1y}, {n1x,n1y,n1z} };
@@ -269,9 +272,9 @@ static void loadCastleObj() {
             float v2x = attrib.vertices[3 * f2 + 0];
             float v2y = attrib.vertices[3 * f2 + 1];
             float v2z = attrib.vertices[3 * f2 + 2];
-            float n2x = attrib.normals [3 * f2 + 0];
-            float n2y = attrib.normals [3 * f2 + 1];
-            float n2z = attrib.normals [3 * f2 + 2];
+            float n2x = attrib.normals [3 * n2 + 0];
+            float n2y = attrib.normals [3 * n2 + 1];
+            float n2z = attrib.normals [3 * n2 + 2];
             float u2x = 0.5; //v2x + v2z;
             float u2y = 0.5; //v2y;
             vboCastle[vertCtr++] = (vertex){ {v2x,v2y,v2z}, {u2x,u2y}, {n2x,n2y,n2z} };
@@ -415,9 +418,6 @@ static void sceneRender(int eye)
     Mtx_Identity(&modelView);
     Mtx_Translate(&modelView, 2, 1, 2, true);
     C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_modelView, &modelView);
-    //and light
-    C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightVec,     0.0f, -1.0f, 0.0f, 1337.0f);
-    C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightHalfVec, 0.0f, -1.0f, 0.0f, 1337.0f);
     //draw castle
     C3D_TexBind(0, &texKitten);
     BufInfo_Init(&bufInfo);
