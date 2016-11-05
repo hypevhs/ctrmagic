@@ -5,6 +5,8 @@
 #include "vshader_shbin.h"
 #include "myfs.h"
 #include "music.h"
+#define TINYOBJ_LOADER_C_IMPLEMENTATION
+#include "tinyobj_loader_c.h"
 
 #define CLEAR_COLOR 0x68B0D8FF
 
