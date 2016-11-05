@@ -111,7 +111,7 @@ static vertex* vboCastle;
 static u32 vboCastleLength;
 static C3D_Tex texKitten;
 static C3D_Tex texLava;
-static float camX = 0.0, camY = 2.0, camZ = 2.0, camRotY = 0.0;
+static float camX = 0.0, camY = 2.0, camZ = 2.0, camRotX = M_PI / 4, camRotY = 0.0;
 
 static void terrainGen() {
     int n = (LANDSCAPE_TILE_SIZE + 1); //heightMapSize
@@ -367,7 +367,7 @@ static void sceneRender(int eye)
     Mtx_PerspStereoTilt(&projection, 80.0f*M_PI/180.0f, C3D_AspectRatioTop, 0.01f, 1000.0f, iod, 5.0, false);
 
     //for global camera
-    Mtx_RotateX(&projection, M_PI / 4, true);
+    Mtx_RotateX(&projection, camRotX, true);
     Mtx_RotateY(&projection, camRotY, true);
     Mtx_Translate(&projection, -camX, -camY, -camZ, true);
 
@@ -495,6 +495,7 @@ int main()
 
         if (kHeld & KEY_R)
         {
+            camRotX += -howFarY * 0.03;
             camRotY += howFarX * 0.03;
         }
         else if (kHeld & KEY_Y)
