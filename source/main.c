@@ -103,6 +103,8 @@ static C3D_Mtx material =
 
 static vertex* vboTerrain;
 static vertex* vboOrigin;
+static vertex* vboCorner;
+static u16* vboCornerIndex;
 static C3D_Tex texKitten;
 static C3D_Tex texLava;
 static float camX = 0.0, camY = 2.0, camZ = 2.0, camRotY = 0.0;
@@ -234,6 +236,16 @@ static void sceneInit(void)
     memcpy(vboOrigin, cube_vertex_list, cube_vertex_list_count * sizeof(vertex));
     printf("made vboOrigin with %d bytes\n", cube_vertex_list_count * sizeof(vertex));
     terrainGen();
+    vboCorner = linearAlloc(6 * sizeof(vertex));
+    vboCorner[0] = (vertex){ {-.5, 1, .5},{0,0},{-M_SQRT2,0, M_SQRT2} };
+    vboCorner[1] = (vertex){ {-.5, 0, .5},{0,1},{-M_SQRT2,0, M_SQRT2} };
+    vboCorner[2] = (vertex){ { .5, 1, .5},{1,0},{ M_SQRT2,0, M_SQRT2} };
+    vboCorner[3] = (vertex){ { .5, 0, .5},{1,1},{ M_SQRT2,0, M_SQRT2} };
+    vboCorner[4] = (vertex){ { .5, 1,-.5},{0,0},{ M_SQRT2,0,-M_SQRT2} };
+    vboCorner[5] = (vertex){ { .5, 0,-.5},{0,1},{ M_SQRT2,0,-M_SQRT2} };
+    vboCornerIndex = linearAlloc(12 * sizeof(u16));
+    u16 idxArray[] = { 0,1,2,3,4,5 };
+    memcpy(vboCornerIndex, idxArray, 6*sizeof(u16));
 
     //load textures from files
     loadTexture(&texKitten, "/3ds/ctrmagic/kitten.bin", 64);
@@ -290,6 +302,19 @@ static void sceneRender(int eye)
     BufInfo_Add(&bufInfo, vboOrigin, sizeof(vertex), 3, 0x210);
     C3D_SetBufInfo(&bufInfo);
     C3D_DrawArrays(GPU_TRIANGLES, 0, cube_vertex_list_count);
+
+    //update modelview
+    Mtx_Identity(&modelView);
+    Mtx_Translate(&modelView, 0, 1, 0, true);
+    C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_modelView, &modelView);
+    //and light I guess
+    C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightVec,     -M_SQRT2, 0.0f, -M_SQRT2, 1337.0f);
+    C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightHalfVec, -M_SQRT2, 0.0f, -M_SQRT2, 1337.0f);
+    //draw corner vbo
+    BufInfo_Init(&bufInfo);
+    BufInfo_Add(&bufInfo, vboCorner, sizeof(vertex), 3, 0x210);
+    C3D_SetBufInfo(&bufInfo);
+    C3D_DrawElements(GPU_TRIANGLE_STRIP, 6, 1, vboCornerIndex);
 }
 
 static void sceneExit(void)
@@ -301,6 +326,8 @@ static void sceneExit(void)
     // Free the VBO
     linearFree(vboTerrain);
     linearFree(vboOrigin);
+    linearFree(vboCorner);
+    linearFree(vboCornerIndex);
 
     // Free the shader program
     shaderProgramFree(&program);
