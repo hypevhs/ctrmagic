@@ -105,7 +105,7 @@ static vertex* vboTerrain;
 static vertex* vboOrigin;
 static C3D_Tex texKitten;
 static C3D_Tex texLava;
-static float camX = 0.0, camY = 2.0, camZ = 2.0;
+static float camX = 0.0, camY = 2.0, camZ = 2.0, camRotY = 0.0;
 
 static void terrainGen() {
     int n = (LANDSCAPE_TILE_SIZE + 1); //heightMapSize
@@ -258,6 +258,7 @@ static void sceneRender(int eye)
 
     //for global camera
     Mtx_RotateX(&projection, M_PI / 4, true);
+    Mtx_RotateY(&projection, camRotY, true);
     Mtx_Translate(&projection, -camX, -camY, -camZ, true);
 
     // Update the uniforms
@@ -355,7 +356,11 @@ int main()
         float howFarY = analog.dy / 160.0; //no idea why its max and min is this
         float unitsPerFrame = 0.03;
 
-        if (kHeld & KEY_Y)
+        if (kHeld & KEY_R)
+        {
+            camRotY += howFarX * 0.03;
+        }
+        else if (kHeld & KEY_Y)
         {
             camX += howFarX * unitsPerFrame;
             camY += howFarY * unitsPerFrame;
