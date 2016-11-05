@@ -410,6 +410,20 @@ static void sceneRender(int eye)
     BufInfo_Add(&bufInfo, vboCorner, sizeof(vertex), 3, 0x210);
     C3D_SetBufInfo(&bufInfo);
     C3D_DrawElements(GPU_TRIANGLE_STRIP, 6, 1, vboCornerIndex);
+
+    //update modelview
+    Mtx_Identity(&modelView);
+    Mtx_Translate(&modelView, 2, 1, 2, true);
+    C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_modelView, &modelView);
+    //and light
+    C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightVec,     0.0f, -1.0f, 0.0f, 1337.0f);
+    C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightHalfVec, 0.0f, -1.0f, 0.0f, 1337.0f);
+    //draw castle
+    C3D_TexBind(0, &texKitten);
+    BufInfo_Init(&bufInfo);
+    BufInfo_Add(&bufInfo, vboCastle, sizeof(vertex), 3, 0x210);
+    C3D_SetBufInfo(&bufInfo);
+    C3D_DrawArrays(GPU_TRIANGLES, 0, vboCastleLength);
 }
 
 static void sceneExit(void)
