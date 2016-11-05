@@ -107,6 +107,8 @@ static vertex* vboTerrain;
 static vertex* vboOrigin;
 static vertex* vboCorner;
 static u16* vboCornerIndex;
+static vertex* vboCastle;
+static u32 vboCastleLength;
 static C3D_Tex texKitten;
 static C3D_Tex texLava;
 static float camX = 0.0, camY = 2.0, camZ = 2.0, camRotY = 0.0;
@@ -194,6 +196,92 @@ static void terrainGen() {
     printf("listIdx is %d and it should be %d\n", listIdx, LANDSCAPE_VERTEX_COUNT);
 }
 
+static void loadCastleObj() {
+    tinyobj_attrib_t attrib;
+    tinyobj_shape_t* shapes = NULL;
+    size_t num_shapes;
+    tinyobj_material_t* materials = NULL;
+    size_t num_materials;
+
+    Handle fsHandle;
+    u32 fsSize;
+    fsopen(&fsHandle, &fsSize, "/3ds/ctrmagic/castle.obj");
+    char* data = linearAlloc(sizeof(char) * fsSize);
+    fsread(fsHandle, fsSize, data);
+    int idx = 0;
+    while (data[idx] != '\n') {
+        printf("%c", data[idx]);
+        idx++;
+    }
+    printf("\n");
+
+    int ret = tinyobj_parse_obj(&attrib, &shapes, &num_shapes, &materials,
+                                &num_materials, data, fsSize, TINYOBJ_FLAG_TRIANGULATE);
+    linearFree(data);
+    if (ret != TINYOBJ_SUCCESS) {
+        printf("could not load model!!1\n");
+        return;
+    }
+    printf("# of shapes    = %d\n", (int)num_shapes);
+    printf("# of materials = %d\n", (int)num_materials);
+    printf("# of verts     = %d\n", (int)attrib.num_vertices);
+    vboCastleLength = attrib.num_face_num_verts * 3;
+
+    //assuming triangulated face
+    size_t num_triangles = attrib.num_face_num_verts;
+    size_t face_offset = 0;
+    vboCastle = (vertex*)linearAlloc(sizeof(vertex) * num_triangles * 3);
+
+    u32 vertCtr = 0;
+    //for each face in the obj
+    for (int face = 0; face < attrib.num_face_num_verts; face++) {
+        assert(attrib.face_num_verts[face] % 3 == 0); /* assume all triangle faces. */
+        //for each triangle in the face
+        for (size_t tri = 0; tri < (size_t)attrib.face_num_verts[face] / 3; tri++) {
+            //get the indexes for this tri
+            tinyobj_vertex_index_t idx0 = attrib.faces[face_offset + 3 * tri + 0];
+            tinyobj_vertex_index_t idx1 = attrib.faces[face_offset + 3 * tri + 1];
+            tinyobj_vertex_index_t idx2 = attrib.faces[face_offset + 3 * tri + 2];
+            size_t f0 = idx0.v_idx; //idx v0
+            size_t f1 = idx1.v_idx; //idx v1
+            size_t f2 = idx2.v_idx; //idx v2
+
+            float v0x = attrib.vertices[3 * f0 + 0];
+            float v0y = attrib.vertices[3 * f0 + 1];
+            float v0z = attrib.vertices[3 * f0 + 2];
+            float n0x = attrib.normals [3 * f0 + 0];
+            float n0y = attrib.normals [3 * f0 + 1];
+            float n0z = attrib.normals [3 * f0 + 2];
+            float u0x = 0.5; //v0x + v0z;
+            float u0y = 0.5; //v0y;
+            vboCastle[vertCtr++] = (vertex){ {v0x,v0y,v0z}, {u0x,u0y}, {n0x,n0y,n0z} };
+
+            float v1x = attrib.vertices[3 * f1 + 0];
+            float v1y = attrib.vertices[3 * f1 + 1];
+            float v1z = attrib.vertices[3 * f1 + 2];
+            float n1x = attrib.normals [3 * f1 + 0];
+            float n1y = attrib.normals [3 * f1 + 1];
+            float n1z = attrib.normals [3 * f1 + 2];
+            float u1x = 0.5; //v1x + v1z;
+            float u1y = 0.5; //v1y;
+            vboCastle[vertCtr++] = (vertex){ {v1x,v1y,v1z}, {u1x,u1y}, {n1x,n1y,n1z} };
+
+            float v2x = attrib.vertices[3 * f2 + 0];
+            float v2y = attrib.vertices[3 * f2 + 1];
+            float v2z = attrib.vertices[3 * f2 + 2];
+            float n2x = attrib.normals [3 * f2 + 0];
+            float n2y = attrib.normals [3 * f2 + 1];
+            float n2z = attrib.normals [3 * f2 + 2];
+            float u2x = 0.5; //v2x + v2z;
+            float u2y = 0.5; //v2y;
+            vboCastle[vertCtr++] = (vertex){ {v2x,v2y,v2z}, {u2x,u2y}, {n2x,n2y,n2z} };
+
+        }
+        face_offset += (size_t)attrib.face_num_verts[face];
+    }
+    printf("%lu should be %u\n", vertCtr, num_triangles * 3);
+}
+
 static void loadTexture(C3D_Tex* texStore, char* path, int size) {
     Handle fsHandle;
     u32 fsSize;
@@ -234,10 +322,13 @@ static void sceneInit(void)
     AttrInfo_AddLoader(attrInfo, 2, GPU_FLOAT, 3); // v2=normal
 
     //create the VBOs
+    //origin
     vboOrigin = linearAlloc(cube_vertex_list_count * sizeof(vertex));
     memcpy(vboOrigin, cube_vertex_list, cube_vertex_list_count * sizeof(vertex));
     printf("made vboOrigin with %d bytes\n", cube_vertex_list_count * sizeof(vertex));
+    //terrain
     terrainGen();
+    //corner and index
     vboCorner = linearAlloc(6 * sizeof(vertex));
     vboCorner[0] = (vertex){ {-.5, 1, .5},{0,0},{-M_SQRT2,0, M_SQRT2} };
     vboCorner[1] = (vertex){ {-.5, 0, .5},{0,1},{-M_SQRT2,0, M_SQRT2} };
@@ -248,6 +339,8 @@ static void sceneInit(void)
     vboCornerIndex = linearAlloc(12 * sizeof(u16));
     u16 idxArray[] = { 0,1,2,3,4,5 };
     memcpy(vboCornerIndex, idxArray, 6*sizeof(u16));
+    //castle
+    loadCastleObj();
 
     //load textures from files
     loadTexture(&texKitten, "/3ds/ctrmagic/kitten.bin", 64);
@@ -330,6 +423,7 @@ static void sceneExit(void)
     linearFree(vboOrigin);
     linearFree(vboCorner);
     linearFree(vboCornerIndex);
+    linearFree(vboCastle);
 
     // Free the shader program
     shaderProgramFree(&program);
