@@ -225,13 +225,13 @@ static void loadCastleObj() {
     printf("# of shapes    = %d\n", (int)num_shapes);
     printf("# of materials = %d\n", (int)num_materials);
     printf("# of verts     = %d\n", (int)attrib.num_vertices);
-    vboCastleLength = attrib.num_face_num_verts * 3;
 
     //assuming triangulated face
     size_t num_triangles = attrib.num_face_num_verts;
-    size_t face_offset = 0;
-    vboCastle = (vertex*)linearAlloc(sizeof(vertex) * num_triangles * 3);
+    vboCastleLength = num_triangles * 3;
+    vboCastle = (vertex*)linearAlloc(sizeof(vertex) * vboCastleLength);
 
+    size_t face_offset = 0;
     u32 vertCtr = 0;
     //for each face in the obj
     for (int face = 0; face < attrib.num_face_num_verts; face++) {
