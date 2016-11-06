@@ -480,12 +480,14 @@ int main()
         C3D_RenderBufTransfer(&rbLeft, leftFrame, DISPLAY_TRANSFER_FLAGS);
         C3D_RenderBufClear(&rbLeft);
 
-        C3D_RenderBufBind(&rbRight);
-        sceneRender(1);
-        C3D_Flush();
-        u32* rightFrame = (u32*)gfxGetFramebuffer(GFX_TOP, GFX_RIGHT, NULL, NULL);
-        C3D_RenderBufTransfer(&rbRight, rightFrame, DISPLAY_TRANSFER_FLAGS);
-        C3D_RenderBufClear(&rbRight);
+        if (osGet3DSliderState() != 0) {
+            C3D_RenderBufBind(&rbRight);
+            sceneRender(1);
+            C3D_Flush();
+            u32* rightFrame = (u32*)gfxGetFramebuffer(GFX_TOP, GFX_RIGHT, NULL, NULL);
+            C3D_RenderBufTransfer(&rbRight, rightFrame, DISPLAY_TRANSFER_FLAGS);
+            C3D_RenderBufClear(&rbRight);
+        }
 
         // Flush the framebuffers out of the data cache (not necessary with pure GPU rendering)
         //gfxFlushBuffers();
