@@ -96,10 +96,10 @@ static int uLoc_lightVec, uLoc_lightHalfVec, uLoc_lightClr, uLoc_material;
 static C3D_Mtx projection;
 static C3D_Mtx material =
 {
-    {
-    { { 0.0f, 0.5f, 0.5f, 0.5f } }, // Ambient
-    { { 0.0f, 0.4f, 0.4f, 0.4f } }, // Diffuse
-    { { 0.0f, 0.8f, 0.8f, 0.8f } }, // Specular
+    { //order is ? B G R
+    { { 0.0f, 0.3f, 0.3f, 0.3f } }, // Ambient
+    { { 0.0f, 0.7f, 0.7f, 0.7f } }, // Diffuse
+    { { 0.0f, 0.1f, 0.1f, 0.1f } }, // Specular
     { { 1.0f, 0.0f, 0.0f, 0.0f } }, // Emission
     }
 };
