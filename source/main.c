@@ -408,6 +408,7 @@ static void sceneExit(void)
 
     // Free the VBO
     linearFree(vboTerrain);
+    linearFree(vboTerrainIndex);
     linearFree(vboOrigin);
     linearFree(vboCorner);
     linearFree(vboCornerIndex);
