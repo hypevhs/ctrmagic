@@ -84,10 +84,9 @@ static const vertex cube_vertex_list[] =
 #define cube_vertex_list_count (sizeof(cube_vertex_list)/sizeof(cube_vertex_list[0]))
 
 #define LANDSCAPE_TILE_SIZE 50 //WxH
-#define LANDSCAPE_TILE_COUNT (LANDSCAPE_TILE_SIZE*LANDSCAPE_TILE_SIZE)
-#define LANDSCAPE_TRIANGLE_COUNT (LANDSCAPE_TILE_COUNT*2)
-#define LANDSCAPE_VERTEX_COUNT (LANDSCAPE_TRIANGLE_COUNT*3)
-#define LANDSCAPE_VBO_SIZE (LANDSCAPE_VERTEX_COUNT*sizeof(vertex))
+#define LANDSCAPE_INDEX_COUNT (((LANDSCAPE_TILE_SIZE+1)*LANDSCAPE_TILE_SIZE*2) + ((LANDSCAPE_TILE_SIZE-1)*2))
+//2 extra verts between each row are added for degenerate tris
+#define LANDSCAPE_VERTEX_COUNT ((LANDSCAPE_TILE_SIZE+1)*(LANDSCAPE_TILE_SIZE+1))
 
 static DVLB_s* vshader_dvlb;
 static shaderProgram_s program;
@@ -105,6 +104,7 @@ static C3D_Mtx material =
 };
 
 static vertex* vboTerrain;
+static u16* vboTerrainIndex;
 static vertex* vboOrigin;
 static vertex* vboCorner;
 static u16* vboCornerIndex;
@@ -155,48 +155,47 @@ static void terrainGen() {
 
     //todo: generate heightmap
     for (int hmidx = 0; hmidx < hmSize; hmidx++) {
-        heightMap[hmidx] = (randf() * 2.0 - 1.0) / 10.0;
+        heightMap[hmidx] = (randf() * 2.0 - 1.0) / 6.0;
     }
 
-    vboTerrain = linearAlloc(LANDSCAPE_VBO_SIZE);
-    int listIdx = 0;
-    for (int x = 0; x < LANDSCAPE_TILE_SIZE; x++)
-    {
-        for (int y = 0; y < LANDSCAPE_TILE_SIZE; y++)
-        {
-            float realX0 = x / 2.0;
-            float realX1 = (x + 1) / 2.0;
-            float realY0 = y / 2.0;
-            float realY1 = (y + 1) / 2.0;
-            float mapTL = heightMap[y * n + x];
-            float mapBL = heightMap[(y + 1) * n + x];
-            float mapTR = heightMap[y * n + (x + 1)];
-            float mapBR = heightMap[(y + 1) * n + (x + 1)];
-            vertex topLef = (vertex){{realX0, mapTL, realY0}, {0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}};
-            vertex botLef = (vertex){{realX0, mapBL, realY1}, {0.0f, 1.0f}, {0.0f, 1.0f, 0.0f}};
-            vertex topRit = (vertex){{realX1, mapTR, realY0}, {1.0f, 0.0f}, {0.0f, 1.0f, 0.0f}};
-            vertex botRit = (vertex){{realX1, mapBR, realY1}, {1.0f, 1.0f}, {0.0f, 1.0f, 0.0f}};
-            float norm[3];
+    vboTerrain = linearAlloc(LANDSCAPE_VERTEX_COUNT * sizeof(vertex));
+    vboTerrainIndex = linearAlloc(LANDSCAPE_INDEX_COUNT * sizeof(u16));
 
-            calcNormal(topLef.position, botLef.position, topRit.position, norm);
-            memcpy(topLef.normal, norm, 3*sizeof(float));
-            memcpy(botLef.normal, norm, 3*sizeof(float));
-            memcpy(topRit.normal, norm, 3*sizeof(float));
-            vboTerrain[listIdx++] = topLef;
-            vboTerrain[listIdx++] = botLef;
-            vboTerrain[listIdx++] = topRit;
-
-            calcNormal(topRit.position, botLef.position, botRit.position, norm);
-            memcpy(topLef.normal, norm, 3*sizeof(float));
-            memcpy(botLef.normal, norm, 3*sizeof(float));
-            memcpy(topRit.normal, norm, 3*sizeof(float));
-            vboTerrain[listIdx++] = topRit;
-            vboTerrain[listIdx++] = botLef;
-            vboTerrain[listIdx++] = botRit;
+    //for the vbo, we just make a vert for every heightmap pt
+    int vboIdx = 0;
+    for (int y = 0; y < n; y++) {
+        for (int x = 0; x < n; x++) {
+            float val = heightMap[y * n + x];
+            vboTerrain[vboIdx++] = (vertex){ {x,val,y},{x,-y},{0,1,0} };
         }
     }
+    assert(vboIdx == LANDSCAPE_VERTEX_COUNT);
 
-    printf("listIdx is %d and it should be %d\n", listIdx, LANDSCAPE_VERTEX_COUNT);
+    //then the indexer which is a bunch harder
+    int idxIdx = 0;
+    //for each row except for the last one
+    for (int y = 0; y < n - 1; y++) {
+        //for every column including the last one
+        for (int x = 0; x < n; x++) {
+            int idxHere = y * n + x; //for here
+            int idxBelo = (y+1) * n + x; //for the one underneath
+            //add the topLeft then the bottomLeft
+            vboTerrainIndex[idxIdx++] = idxHere;
+            vboTerrainIndex[idxIdx++] = idxBelo;
+        }
+        //with every row-end except for the last row-end,
+        if (y != n-2) {
+            //add 2 verts to make some degenerate tris to reset the primitive
+            //first, the last in the bottom row
+            int idxA = (y+1) * n + (n-1);
+            vboTerrainIndex[idxIdx++] = idxA;
+            //then, the first in bottom row
+            int idxB = (y+1) * n + (0);
+            vboTerrainIndex[idxIdx++] = idxB;
+        }
+    }
+    printf("%d, %d\n", idxIdx, LANDSCAPE_INDEX_COUNT);
+    assert(idxIdx == LANDSCAPE_INDEX_COUNT);
 }
 
 static void loadCastleObj() {
@@ -363,7 +362,7 @@ static void sceneRender(int eye)
     BufInfo_Init(&bufInfo);
     BufInfo_Add(&bufInfo, vboTerrain, sizeof(vertex), 3, 0x210);
     C3D_SetBufInfo(&bufInfo);
-    C3D_DrawArrays(GPU_TRIANGLES, 0, LANDSCAPE_VERTEX_COUNT);
+    C3D_DrawElements(GPU_TRIANGLE_STRIP, LANDSCAPE_INDEX_COUNT, 1, vboTerrainIndex);
 
     //update modelview
     Mtx_Identity(&modelView);
