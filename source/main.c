@@ -114,6 +114,10 @@ static C3D_Tex texLava;
 static C3D_Tex texBrick;
 static float camX = 4.0, camY = 4.0, camZ = 4.0, camRotX = M_PI / 4, camRotY = 0.0;
 
+static float randf() {
+    return rand() / (float)RAND_MAX;
+}
+
 static void terrainGen() {
     int n = (LANDSCAPE_TILE_SIZE + 1); //heightMapSize
     int hmSize = n * n;
@@ -122,7 +126,7 @@ static void terrainGen() {
 
     //todo: generate heightmap
     for (int hmidx = 0; hmidx < hmSize; hmidx++) {
-        heightMap[hmidx] = rand() / (float)RAND_MAX;
+        heightMap[hmidx] = (randf() * 2.0 - 1.0) / 10.0;
     }
 
     vboTerrain = linearAlloc(LANDSCAPE_VBO_SIZE);
