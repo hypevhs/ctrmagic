@@ -111,6 +111,7 @@ static vertex* vboCastle;
 static u32 vboCastleLength;
 static C3D_Tex texKitten;
 static C3D_Tex texLava;
+static C3D_Tex texBrick;
 static float camX = 4.0, camY = 4.0, camZ = 4.0, camRotX = M_PI / 4, camRotY = 0.0;
 
 static void terrainGen() {
@@ -308,6 +309,7 @@ static void sceneInit(void)
     //load textures from files
     loadTexture(&texKitten, "/3ds/ctrmagic/kitten.bin", 64, 64);
     loadTexture(&texLava, "/3ds/ctrmagic/lava512.bin", 512, 512);
+    loadTexture(&texBrick, "/3ds/ctrmagic/brick.bin", 256, 128);
 
     // Configure the first fragment shading substage to blend the texture color with
     // the vertex color (calculated by the vertex shader using a lighting algorithm)
@@ -379,7 +381,7 @@ static void sceneRender(int eye)
     Mtx_Translate(&modelView, 2, 0, 2, true);
     C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_modelView, &modelView);
     //draw castle
-    C3D_TexBind(0, &texKitten);
+    C3D_TexBind(0, &texBrick);
     BufInfo_Init(&bufInfo);
     BufInfo_Add(&bufInfo, vboCastle, sizeof(vertex), 3, 0x210);
     C3D_SetBufInfo(&bufInfo);
@@ -391,6 +393,7 @@ static void sceneExit(void)
     // Free the texture
     C3D_TexDelete(&texKitten);
     C3D_TexDelete(&texLava);
+    C3D_TexDelete(&texBrick);
 
     // Free the VBO
     linearFree(vboTerrain);
