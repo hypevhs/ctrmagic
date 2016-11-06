@@ -96,7 +96,7 @@ static C3D_Mtx projection;
 static C3D_Mtx material =
 {
     {
-    { { 0.0f, 0.2f, 0.2f, 0.2f } }, // Ambient
+    { { 0.0f, 0.5f, 0.5f, 0.5f } }, // Ambient
     { { 0.0f, 0.4f, 0.4f, 0.4f } }, // Diffuse
     { { 0.0f, 0.8f, 0.8f, 0.8f } }, // Specular
     { { 1.0f, 0.0f, 0.0f, 0.0f } }, // Emission
