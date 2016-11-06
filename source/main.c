@@ -83,7 +83,7 @@ static const vertex cube_vertex_list[] =
 
 #define cube_vertex_list_count (sizeof(cube_vertex_list)/sizeof(cube_vertex_list[0]))
 
-#define LANDSCAPE_TILE_SIZE 10 //WxH
+#define LANDSCAPE_TILE_SIZE 50 //WxH
 #define LANDSCAPE_TILE_COUNT (LANDSCAPE_TILE_SIZE*LANDSCAPE_TILE_SIZE)
 #define LANDSCAPE_TRIANGLE_COUNT (LANDSCAPE_TILE_COUNT*2)
 #define LANDSCAPE_VERTEX_COUNT (LANDSCAPE_TRIANGLE_COUNT*3)
@@ -361,7 +361,6 @@ static void sceneRender(int eye)
     C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_material,     &material);
     float lightVec[3] = { 0.3,-0.6,0.3 };
     normalize(lightVec);
-    printf("%.2f %.2f %.2f\n", lightVec[0], lightVec[1], lightVec[2]);
     C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightVec,     lightVec[0], lightVec[1], lightVec[2], 1337.0f);
     C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightHalfVec, lightVec[0], lightVec[1], lightVec[2], 1337.0f);
     C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightClr,     1.0f, 1.0f, 1.0f, 1337.0f);
@@ -383,7 +382,7 @@ static void sceneRender(int eye)
     Mtx_Identity(&modelView);
     C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_modelView, &modelView);
     //draw origin cube
-    C3D_TexBind(0, &texLava);
+    C3D_TexBind(0, &texBrick);
     BufInfo_Init(&bufInfo);
     BufInfo_Add(&bufInfo, vboOrigin, sizeof(vertex), 3, 0x210);
     C3D_SetBufInfo(&bufInfo);
