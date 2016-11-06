@@ -39,8 +39,8 @@ def tex2png():
     fo.close()
 
 def png2tex():
-    fi = open("lava512.png", "rb")
-    fo = open("data/lava512.bin", "wb")
+    fi = open("assets/brick.png", "rb")
+    fo = open("assets/brick.bin", "wb")
     reader = png.Reader(fi)
     pObj = reader.read()
     w = pObj[0]
