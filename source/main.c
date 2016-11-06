@@ -351,7 +351,7 @@ static void sceneRender(int eye)
     BufInfo_Init(&bufInfo);
     BufInfo_Add(&bufInfo, vboTerrain, sizeof(vertex), 3, 0x210);
     C3D_SetBufInfo(&bufInfo);
-    //C3D_DrawArrays(GPU_TRIANGLES, 0, LANDSCAPE_VERTEX_COUNT);
+    C3D_DrawArrays(GPU_TRIANGLES, 0, LANDSCAPE_VERTEX_COUNT);
 
     //update modelview
     Mtx_Identity(&modelView);
@@ -374,7 +374,7 @@ static void sceneRender(int eye)
     BufInfo_Init(&bufInfo);
     BufInfo_Add(&bufInfo, vboCorner, sizeof(vertex), 3, 0x210);
     C3D_SetBufInfo(&bufInfo);
-    //C3D_DrawElements(GPU_TRIANGLE_STRIP, 6, 1, vboCornerIndex);
+    C3D_DrawElements(GPU_TRIANGLE_STRIP, 6, 1, vboCornerIndex);
 
     //update modelview
     Mtx_Identity(&modelView);
