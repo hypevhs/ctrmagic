@@ -309,7 +309,7 @@ static void sceneInit(void)
     //load textures from files
     loadTexture(&texKitten, "/3ds/ctrmagic/kitten.bin", 64, 64);
     loadTexture(&texLava, "/3ds/ctrmagic/lava512.bin", 512, 512);
-    loadTexture(&texBrick, "/3ds/ctrmagic/brick.bin", 256, 128);
+    loadTexture(&texBrick, "/3ds/ctrmagic/brick.bin", 128, 64);
 
     // Configure the first fragment shading substage to blend the texture color with
     // the vertex color (calculated by the vertex shader using a lighting algorithm)
