@@ -2,6 +2,7 @@
 #include <citro3d.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 #include "vshader_shbin.h"
 #include "myfs.h"
 #include "music.h"
@@ -113,6 +114,16 @@ static C3D_Tex texKitten;
 static C3D_Tex texLava;
 static C3D_Tex texBrick;
 static float camX = 4.0, camY = 4.0, camZ = 4.0, camRotX = M_PI / 4, camRotY = 0.0;
+typedef struct { float position[3]; float rot[2]; } camPos;
+static const camPos camFly[] = {
+    {{2.234f,0.334f,1.654f},{-0.730f,0.906f}},
+    {{1.149f,0.330f,2.425f},{-0.178f,0.936f}},
+    {{1.437f,2.704f,2.444f},{1.046f,0.223f}},
+    {{3.824f,2.065f,2.444f},{0.832f,-0.870f}},
+    {{3.522f,0.468f,1.679f},{0.065f,-2.113f}}
+};
+int camFlyLength = sizeof(camFly) / sizeof(camFly[0]);
+unsigned long long startTime;
 
 static float randf() {
     return rand() / (float)RAND_MAX;
@@ -411,6 +422,28 @@ static void sceneExit(void)
     DVLB_Free(vshader_dvlb);
 }
 
+unsigned long long msTime() {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    unsigned long long msTime =
+        (unsigned long long)(tv.tv_sec) * 1000 +
+        (unsigned long long)(tv.tv_usec) / 1000;
+    return msTime;
+}
+
+float lerp(float v0, float v1, float t) {
+    return (1-t)*v0 + t*v1;
+}
+
+camPos lerpCam(camPos v0, camPos v1, float t) {
+    float x = lerp(v0.position[0], v1.position[0], t);
+    float y = lerp(v0.position[1], v1.position[1], t);
+    float z = lerp(v0.position[2], v1.position[2], t);
+    float rx = lerp(v0.rot[0], v1.rot[0], t);
+    float ry = lerp(v0.rot[1], v1.rot[1], t);
+    return (camPos){ {x,y,z}, {rx,ry} };
+}
+
 int main()
 {
     // Initialize graphics
@@ -425,6 +458,7 @@ int main()
     //init some other junk
     fsinit();
     musicinit();
+    startTime = msTime();
 
     // Initialize the renderbuffer
     static C3D_RenderBuf rbLeft, rbRight;
@@ -451,6 +485,27 @@ int main()
         u32 kHeld = hidKeysHeld();
         if (kDown & KEY_START)
             break; // break in order to return to hbmenu
+
+        //do camera flying
+        u32 msElapsed = (u32)(msTime() - startTime);
+        if (kHeld & KEY_L) {
+            startTime += 16;
+        }
+        u32 indexFrom = msElapsed / 2000;
+        u32 indexTo = indexFrom + 1;
+        if (indexFrom > camFlyLength - 1) { indexFrom = camFlyLength - 1; }
+        if (indexTo   > camFlyLength - 1) { indexTo   = camFlyLength - 1; }
+        camPos camFrom = camFly[indexFrom];
+        camPos camTo   = camFly[indexTo  ];
+        float tVal = fmodf(msElapsed, 2000) / 2000;
+        if (indexFrom == indexTo) { tVal = 1.0; } //when we end
+        camPos lerped = lerpCam(camFrom, camTo, tVal);
+        //now set the value to whatever we lerped to
+        camX = lerped.position[0];
+        camY = lerped.position[1];
+        camZ = lerped.position[2];
+        camRotX = lerped.rot[0];
+        camRotY = lerped.rot[1];
 
         circlePosition analog;
         hidCircleRead(&analog);
