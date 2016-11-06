@@ -332,10 +332,10 @@ void normalize(float v[3]) {
 static void sceneRender(int eye)
 {
     float iod = osGet3DSliderState();
-    iod *= eye == 0 ? -0.1f : 0.1f;
+    iod *= eye == 0 ? -0.05f : 0.05f;
     // Compute the projection matrix
     Mtx_Identity(&projection);
-    Mtx_PerspStereoTilt(&projection, 80.0f*M_PI/180.0f, C3D_AspectRatioTop, 0.01f, 1000.0f, iod, 5.0, false);
+    Mtx_PerspStereoTilt(&projection, 50.0f*M_PI/180.0f, C3D_AspectRatioTop, 0.01f, 1000.0f, iod, 10.0, false);
 
     //for global camera
     Mtx_RotateX(&projection, camRotX, true);
