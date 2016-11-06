@@ -335,6 +335,14 @@ static void sceneInit(void)
     C3D_TexEnvFunc(env, C3D_Both, GPU_MODULATE);
 }
 
+//produce a unit vector
+void normalize(float v[3]) {
+    float length = sqrtf(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
+    v[0] /= length;
+    v[1] /= length;
+    v[2] /= length;
+}
+
 static void sceneRender(int eye)
 {
     float iod = osGet3DSliderState();
@@ -351,8 +359,11 @@ static void sceneRender(int eye)
     // Update the uniforms
     C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_projection,   &projection);
     C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_material,     &material);
-    C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightVec,     0.0f, -1.0f, 0.0f, 1337.0f);
-    C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightHalfVec, 0.0f, -1.0f, 0.0f, 1337.0f);
+    float lightVec[3] = { 0.3,-0.6,0.3 };
+    normalize(lightVec);
+    printf("%.2f %.2f %.2f\n", lightVec[0], lightVec[1], lightVec[2]);
+    C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightVec,     lightVec[0], lightVec[1], lightVec[2], 1337.0f);
+    C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightHalfVec, lightVec[0], lightVec[1], lightVec[2], 1337.0f);
     C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightClr,     1.0f, 1.0f, 1.0f, 1337.0f);
 
     C3D_BufInfo bufInfo;
