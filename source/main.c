@@ -196,23 +196,6 @@ static void terrainGen() {
     printf("listIdx is %d and it should be %d\n", listIdx, LANDSCAPE_VERTEX_COUNT);
 }
 
-static float randUnit() {
-    return rand() / (float)RAND_MAX;
-}
-
-static vertex newVert(float x, float y, float z) {
-    vertex v;
-    v.position[0] = x;
-    v.position[1] = y;
-    v.position[2] = z;
-    v.texcoord[0] = randUnit();
-    v.texcoord[1] = randUnit();
-    v.normal[0] = randUnit();
-    v.normal[1] = randUnit();
-    v.normal[2] = randUnit();
-    return v;
-}
-
 static void loadCastleObj() {
     tinyobj_attrib_t attrib;
     tinyobj_shape_t* shapes = NULL;
@@ -247,21 +230,17 @@ static void loadCastleObj() {
     //for each indexer in the indexArray
     for (int ii = 0; ii < vboCastleLength; ii++) {
         tinyobj_vertex_index_t v0 = attrib.faces[ii];
-        int indexed = v0.v_idx;
         //get the vertex pos/norm/etc of wherever that indexer points to
-        float x = attrib.vertices[indexed * 3 + 0];
-        float y = attrib.vertices[indexed * 3 + 1];
-        float z = attrib.vertices[indexed * 3 + 2];
+        float x = attrib.vertices[v0.v_idx * 3 + 0];
+        float y = attrib.vertices[v0.v_idx * 3 + 1];
+        float z = attrib.vertices[v0.v_idx * 3 + 2];
+        float vtx = attrib.texcoords[v0.vt_idx * 2 + 0];
+        float vty = attrib.texcoords[v0.vt_idx * 2 + 1];
+        float vnx = attrib.normals[v0.vn_idx * 3 + 0];
+        float vny = attrib.normals[v0.vn_idx * 3 + 1];
+        float vnz = attrib.normals[v0.vn_idx * 3 + 2];
         //and add it to vbo
-        vboCastle[ii] = newVert(x,y,z);
-    }
-    //reverse normals
-    if (1==0) {
-        for (int vIdx = 0; vIdx < vboCastleLength; vIdx += 3) {
-            vertex temp = vboCastle[vIdx];
-            vboCastle[vIdx] = vboCastle[vIdx+1];
-            vboCastle[vIdx+1] = temp;
-        }
+        vboCastle[ii] = (vertex){{x,y,z}, {vtx,vty}, {vnx,vny,vnz}};
     }
 }
 
