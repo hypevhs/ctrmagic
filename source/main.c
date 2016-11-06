@@ -498,14 +498,15 @@ int main()
         camPos camFrom = camFly[indexFrom];
         camPos camTo   = camFly[indexTo  ];
         float tVal = fmodf(msElapsed, 2000) / 2000;
-        if (indexFrom == indexTo) { tVal = 1.0; } //when we end
-        camPos lerped = lerpCam(camFrom, camTo, tVal);
-        //now set the value to whatever we lerped to
-        camX = lerped.position[0];
-        camY = lerped.position[1];
-        camZ = lerped.position[2];
-        camRotX = lerped.rot[0];
-        camRotY = lerped.rot[1];
+        if (indexFrom != indexTo) { //when we end
+            camPos lerped = lerpCam(camFrom, camTo, tVal);
+            //now set the value to whatever we lerped to
+            camX = lerped.position[0];
+            camY = lerped.position[1];
+            camZ = lerped.position[2];
+            camRotX = lerped.rot[0];
+            camRotY = lerped.rot[1];
+        }
 
         circlePosition analog;
         hidCircleRead(&analog);
