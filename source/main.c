@@ -244,7 +244,7 @@ static void loadCastleObj() {
     }
 }
 
-static void loadTexture(C3D_Tex* texStore, char* path, int size) {
+static void loadTexture(C3D_Tex* texStore, char* path, int sizeW, int sizeH) {
     Handle fsHandle;
     u32 fsSize;
 
@@ -253,7 +253,7 @@ static void loadTexture(C3D_Tex* texStore, char* path, int size) {
     char* buf = linearAlloc(sizeof(char) * fsSize);
     fsread(fsHandle, fsSize, buf);
     //load it into c3d
-    C3D_TexInit(texStore, size, size, GPU_RGBA8);
+    C3D_TexInit(texStore, sizeW, sizeH, GPU_RGBA8);
     C3D_TexUpload(texStore, buf);
     C3D_TexSetFilter(texStore, GPU_LINEAR, GPU_LINEAR);
     C3D_TexSetWrap(texStore, GPU_REPEAT, GPU_REPEAT);
@@ -306,8 +306,8 @@ static void sceneInit(void)
     loadCastleObj();
 
     //load textures from files
-    loadTexture(&texKitten, "/3ds/ctrmagic/kitten.bin", 64);
-    loadTexture(&texLava, "/3ds/ctrmagic/lava512.bin", 512);
+    loadTexture(&texKitten, "/3ds/ctrmagic/kitten.bin", 64, 64);
+    loadTexture(&texLava, "/3ds/ctrmagic/lava512.bin", 512, 512);
 
     // Configure the first fragment shading substage to blend the texture color with
     // the vertex color (calculated by the vertex shader using a lighting algorithm)
