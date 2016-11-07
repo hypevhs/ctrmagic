@@ -125,10 +125,6 @@ static const camPos camFly[] = {
 int camFlyLength = sizeof(camFly) / sizeof(camFly[0]);
 unsigned long long startTime;
 
-static float randf() {
-    return rand() / (float)RAND_MAX;
-}
-
 static void calcNormal(float v0[3], float v1[3], float v2[3], float norm[3]) {
     //u = p1 - p0
     float uA[3] = {
@@ -194,7 +190,6 @@ static void terrainGen() {
             vboTerrainIndex[idxIdx++] = idxB;
         }
     }
-    printf("%d, %d\n", idxIdx, LANDSCAPE_INDEX_COUNT);
     assert(idxIdx == LANDSCAPE_INDEX_COUNT);
 }
 
@@ -378,9 +373,6 @@ static void sceneRender(int eye)
     Mtx_Identity(&modelView);
     Mtx_Translate(&modelView, 0, 1, 0, true);
     C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_modelView, &modelView);
-    //and light I guess
-    C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightVec,     -M_SQRT2, 0.0f, -M_SQRT2, 1337.0f);
-    C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightHalfVec, -M_SQRT2, 0.0f, -M_SQRT2, 1337.0f);
     //draw corner vbo
     BufInfo_Init(&bufInfo);
     BufInfo_Add(&bufInfo, vboCorner, sizeof(vertex), 3, 0x210);
@@ -486,7 +478,7 @@ int main()
         //do camera flying
         u32 msElapsed = (u32)(msTime() - startTime);
         if (kHeld & KEY_L) {
-            startTime += 16;
+            startTime += 9999999;
         }
         u32 indexFrom = msElapsed / 2000;
         u32 indexTo = indexFrom + 1;
