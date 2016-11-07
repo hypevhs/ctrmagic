@@ -8,6 +8,8 @@
 #include "music.h"
 #define TINYOBJ_LOADER_C_IMPLEMENTATION
 #include "tinyobj_loader_c.h"
+#include <assert.h>
+#include "diamondsquare.h"
 
 #define CLEAR_COLOR 0x68B0D8FF
 
@@ -83,10 +85,11 @@ static const vertex cube_vertex_list[] =
 
 #define cube_vertex_list_count (sizeof(cube_vertex_list)/sizeof(cube_vertex_list[0]))
 
-#define LANDSCAPE_TILE_SIZE 50 //WxH
+#define LANDSCAPE_TILE_SIZE 64 //WxH
 #define LANDSCAPE_INDEX_COUNT (((LANDSCAPE_TILE_SIZE+1)*LANDSCAPE_TILE_SIZE*2) + ((LANDSCAPE_TILE_SIZE-1)*2))
 //2 extra verts between each row are added for degenerate tris
 #define LANDSCAPE_VERTEX_COUNT ((LANDSCAPE_TILE_SIZE+1)*(LANDSCAPE_TILE_SIZE+1))
+#define LANDSCAPE_SCALE_HORIZ 2
 
 static DVLB_s* vshader_dvlb;
 static shaderProgram_s program;
@@ -146,13 +149,10 @@ static void calcNormal(float v0[3], float v1[3], float v2[3], float norm[3]) {
 static void terrainGen() {
     int n = (LANDSCAPE_TILE_SIZE + 1); //heightMapSize
     int hmSize = n * n;
-    float heightMap[hmSize];
-    memset(heightMap, 0, hmSize * sizeof(float));
+    double* heightMap = linearAlloc(hmSize * sizeof(double));
 
-    //todo: generate heightmap
-    for (int hmidx = 0; hmidx < hmSize; hmidx++) {
-        heightMap[hmidx] = (randf() * 2.0 - 1.0) / 6.0;
-    }
+    //generate heightmap
+    diamondSquare(heightMap, n, n);
 
     vboTerrain = linearAlloc(LANDSCAPE_VERTEX_COUNT * sizeof(vertex));
     vboTerrainIndex = linearAlloc(LANDSCAPE_INDEX_COUNT * sizeof(u16));
@@ -161,8 +161,10 @@ static void terrainGen() {
     int vboIdx = 0;
     for (int y = 0; y < n; y++) {
         for (int x = 0; x < n; x++) {
-            float val = heightMap[y * n + x];
-            vboTerrain[vboIdx++] = (vertex){ {x,val,y},{x,-y},{0,1,0} };
+            float realX = x*LANDSCAPE_SCALE_HORIZ;
+            float realY = (heightMap[y * n + x]-.5) * 10;
+            float realZ = y*LANDSCAPE_SCALE_HORIZ;
+            vboTerrain[vboIdx++] = (vertex){ {realX,realY,realZ},{x,-y},{0,1,0} };
         }
     }
     assert(vboIdx == LANDSCAPE_VERTEX_COUNT);
@@ -191,6 +193,7 @@ static void terrainGen() {
         }
     }
     assert(idxIdx == LANDSCAPE_INDEX_COUNT);
+    linearFree(heightMap);
 }
 
 static void loadCastleObj() {
