@@ -515,7 +515,7 @@ int main()
         if (analog.dy < 20 && analog.dy > -20) analog.dy = 0;
         float howFarX = analog.dx / 160.0;
         float howFarY = analog.dy / 160.0; //no idea why its max and min is this
-        float unitsPerFrame = 0.03;
+        float unitsPerFrame = 0.1;
 
         if (kHeld & KEY_R)
         {
