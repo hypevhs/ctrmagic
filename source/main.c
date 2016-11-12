@@ -361,6 +361,8 @@ static void sceneRender(int eye)
 
     //update modelview
     Mtx_Identity(&modelView);
+    float offset = (LANDSCAPE_TILE_SIZE * LANDSCAPE_SCALE_HORIZ) / 2.0;
+    Mtx_Translate(&modelView, -offset, 0, -offset, true);
     C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_modelView, &modelView);
     //draw terrain
     C3D_TexBind(0, &texKitten);
@@ -391,7 +393,7 @@ static void sceneRender(int eye)
 
     //update modelview
     Mtx_Identity(&modelView);
-    Mtx_Translate(&modelView, 2, 0, 2, true);
+    Mtx_Translate(&modelView, 0, vboTerrain[LANDSCAPE_VERTEX_COUNT / 2].position[1], 0, true);
     C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_modelView, &modelView);
     //draw castle
     C3D_TexBind(0, &texBrick);
