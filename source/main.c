@@ -146,7 +146,11 @@ static void calcNormal(float v0[3], float v1[3], float v2[3], float norm[3]) {
     norm[2] = uA[0]*vA[1] - uA[1]*vA[0];
 }
 
+static int randSeed = 54; //known seed
+
 static void terrainGen() {
+    srand(randSeed);
+    printf("gen with seed %d\n", randSeed);
     int n = (LANDSCAPE_TILE_SIZE + 1); //heightMapSize
     int hmSize = n * n;
     double* heightMap = linearAlloc(hmSize * sizeof(double));
