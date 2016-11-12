@@ -166,7 +166,7 @@ static void terrainGen() {
     for (int y = 0; y < n; y++) {
         for (int x = 0; x < n; x++) {
             float realX = x*LANDSCAPE_SCALE_HORIZ;
-            float realY = (heightMap[y * n + x]-.5) * 10;
+            float realY = (heightMap[y * n + x]) * 15;
             float realZ = y*LANDSCAPE_SCALE_HORIZ;
             vboTerrain[vboIdx++] = (vertex){ {realX,realY,realZ},{x,-y},{0,1,0} };
         }
