@@ -336,9 +336,12 @@ static void sceneRender(int eye)
     Mtx_PerspStereoTilt(&projection, 50.0f*M_PI/180.0f, C3D_AspectRatioTop, 0.01f, 1000.0f, iod, 10.0, false);
 
     //for global camera
-    Mtx_RotateX(&projection, camRotX, true);
-    Mtx_RotateY(&projection, camRotY, true);
-    Mtx_Translate(&projection, -camX, -camY, -camZ, true);
+    C3D_Mtx camera;
+    Mtx_Identity(&camera);
+    Mtx_RotateX(&camera, camRotX, true);
+    Mtx_RotateY(&camera, camRotY, true);
+    Mtx_Translate(&camera, -camX, -camY, -camZ, true);
+    Mtx_Multiply(&projection, &projection, &camera);
 
     // Update the uniforms
     C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_projection,   &projection);
