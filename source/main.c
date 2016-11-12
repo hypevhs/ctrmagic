@@ -158,6 +158,20 @@ static void terrainGen() {
     //generate heightmap
     diamondSquare(heightMap, n, n);
 
+    //smooth out where castle is
+    int hX = n / 2;
+    int hY = n / 2;
+    float setTo = heightMap[hY * n + hX];
+    heightMap[(hY-1) * n + (hX-1)] = setTo;
+    heightMap[(hY-1) * n + (hX+0)] = setTo;
+    heightMap[(hY-1) * n + (hX+1)] = setTo;
+    heightMap[(hY+0) * n + (hX-1)] = setTo;
+    heightMap[(hY+0) * n + (hX+0)] = setTo;
+    heightMap[(hY+0) * n + (hX+1)] = setTo;
+    heightMap[(hY+1) * n + (hX-1)] = setTo;
+    heightMap[(hY+1) * n + (hX+0)] = setTo;
+    heightMap[(hY+1) * n + (hX+1)] = setTo;
+
     vboTerrain = linearAlloc(LANDSCAPE_VERTEX_COUNT * sizeof(vertex));
     vboTerrainIndex = linearAlloc(LANDSCAPE_INDEX_COUNT * sizeof(u16));
 
