@@ -128,7 +128,7 @@ static const camPos camFly[] = {
 int camFlyLength = sizeof(camFly) / sizeof(camFly[0]);
 unsigned long long startTime;
 
-static void calcNormal(float v0[3], float v1[3], float v2[3], float norm[3]) {
+static void calcNormal(float norm[3], float v0[3], float v1[3], float v2[3]) {
     //u = p1 - p0
     float uA[3] = {
         v1[0] - v0[0],
@@ -144,6 +144,33 @@ static void calcNormal(float v0[3], float v1[3], float v2[3], float norm[3]) {
     norm[0] = uA[1]*vA[2] - uA[2]*vA[1];
     norm[1] = uA[2]*vA[0] - uA[0]*vA[2];
     norm[2] = uA[0]*vA[1] - uA[1]*vA[0];
+}
+
+/*
+mesh around # looks like this. use these points to calculate avg face normal
+   .-.
+  /|/|
+ .-#-.
+ |/|/
+ .-.
+*/
+static void diamondNormal(float normOut[3], float self, float uu, float ur, float rr, float dd, float dl, float ll) {
+    float vself[3] = {0,self,0};
+    float vuu[3] = { 0, uu, 1};
+    float vur[3] = { 1, ur, 1};
+    float vrr[3] = { 1, rr, 0};
+    float vdd[3] = { 0, dd,-1};
+    float vdl[3] = {-1, dl,-1};
+    float vll[3] = {-1, ll, 0};
+    float n1[3]; calcNormal(n1, vself, vuu, vur);
+    float n2[3]; calcNormal(n2, vself, vur, vrr);
+    float n3[3]; calcNormal(n3, vself, vrr, vdd);
+    float n4[3]; calcNormal(n4, vself, vdd, vdl);
+    float n5[3]; calcNormal(n5, vself, vdl, vll);
+    float n6[3]; calcNormal(n6, vself, vll, vuu);
+    normOut[0] = (n1[0]+n2[0]+n3[0]+n4[0]+n5[0]+n6[0]) / 6.0;
+    normOut[1] = (n1[1]+n2[1]+n3[1]+n4[1]+n5[1]+n6[1]) / 6.0;
+    normOut[2] = (n1[2]+n2[2]+n3[2]+n4[2]+n5[2]+n6[2]) / 6.0;
 }
 
 static int randSeed = 54; //known seed
@@ -179,10 +206,23 @@ static void terrainGen() {
     int vboIdx = 0;
     for (int y = 0; y < n; y++) {
         for (int x = 0; x < n; x++) {
-            float realX = x*LANDSCAPE_SCALE_HORIZ;
+            float realX = x;
             float realY = (heightMap[y * n + x]) * 15;
-            float realZ = y*LANDSCAPE_SCALE_HORIZ;
-            vboTerrain[vboIdx++] = (vertex){ {realX,realY,realZ},{x,-y},{0,1,0} };
+            float realZ = y;
+            float texScale = 4;
+            float norm[] = {0, 1, 0}; //up by default
+            //if we have neighboring points, calculate the normal from the "diamond"
+            if (y >= 1 && y < n - 1 && x >= 1 && x < n - 1) {
+                float self = realY;
+                float uu = (heightMap[(y + 1) * n + (x + 0)]) * 15;
+                float ur = (heightMap[(y + 1) * n + (x + 1)]) * 15;
+                float rr = (heightMap[(y + 0) * n + (x + 1)]) * 15;
+                float dd = (heightMap[(y - 1) * n + (x + 0)]) * 15;
+                float dl = (heightMap[(y - 1) * n + (x - 1)]) * 15;
+                float ll = (heightMap[(y + 0) * n + (x - 1)]) * 15;
+                diamondNormal(norm, self, uu, ur, rr, dd, dl, ll);
+            }
+            vboTerrain[vboIdx++] = (vertex){ {realX,realY,realZ},{x*texScale,-y*texScale},{norm[0],norm[1],norm[2]} };
         }
     }
     assert(vboIdx == LANDSCAPE_VERTEX_COUNT);
@@ -377,6 +417,7 @@ static void sceneRender(int eye)
     Mtx_Identity(&modelView);
     float offset = (LANDSCAPE_TILE_SIZE * LANDSCAPE_SCALE_HORIZ) / 2.0;
     Mtx_Translate(&modelView, -offset, 0, -offset, true);
+    Mtx_Scale(&modelView, LANDSCAPE_SCALE_HORIZ, 1, LANDSCAPE_SCALE_HORIZ);
     C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_modelView, &modelView);
     //draw terrain
     C3D_TexBind(0, &texKitten);
