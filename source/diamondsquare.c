@@ -25,7 +25,7 @@ void initMap(double* map) {
             set(map, y, x, setTo);
         }
     }
-    
+
     set(map, 0, 0, randomDouble());
     set(map, 0, DISQ_WIDTH-1, randomDouble());
     set(map, DISQ_HEIGHT-1, 0, randomDouble());
@@ -36,7 +36,7 @@ void diamondSquareRecurse(double* map, int x, int y, int w, int h, double noiseS
     if (w <= 2 || h <= 2) {
         return;
     }
-    
+
     //do diamond square for this region
     int x2 = x + w-1; //rightmost cell
     int y2 = y + h-1; //bottom cell
@@ -44,18 +44,18 @@ void diamondSquareRecurse(double* map, int x, int y, int w, int h, double noiseS
     double topRght = get(map, y, x2);
     double botLeft = get(map, y2, x);
     double botRght = get(map, y2, x2);
-    
+
     //diamond step
     double averageCorners = (topLeft + topRght + botLeft + botRght)/4.0;
     double newCenter = averageCorners - ((randomDouble() - 0.5) * noiseScale * 2);
     int centerX = x + w / 2;
     int centerY = y + h / 2;
     set(map, centerY, centerX, newCenter);
-    
+
     //square step
     int midX = x + w/2;
     int midY = y + h/2;
-    
+
     //top = avg(tl, tr) + noise
     double top = (topLeft + topRght)/2.0 + (randomDouble() - 0.5) * noiseScale;
     if (get(map, y, midX) == -1.0)
@@ -72,7 +72,7 @@ void diamondSquareRecurse(double* map, int x, int y, int w, int h, double noiseS
     double rig = (topRght + botRght)/2.0 + (randomDouble() - 0.5) * noiseScale;
     if (get(map, midY, x2) == -1.0)
         set(map, midY, x2, rig);
-    
+
     //if can divide, do so for each quarter
     int newW = w/2+1;
     int newH = h/2+1;
@@ -81,7 +81,7 @@ void diamondSquareRecurse(double* map, int x, int y, int w, int h, double noiseS
     }
     newW = max(newW, 3);
     newH = max(newH, 3);
-    
+
     double newNoiseScale = noiseScale * pow(2.0, -0.75);
     diamondSquareRecurse(map, x,       y,       newW, newH, newNoiseScale);
     diamondSquareRecurse(map, centerX, y,       newW, newH, newNoiseScale);
