@@ -324,7 +324,7 @@ static void sceneInit(void)
     loadCastleObj();
 
     //load textures from files
-    loadTexture(&texKitten, "/3ds/ctrmagic/kitten.bin", 64, 64);
+    loadTexture(&texKitten, "/3ds/ctrmagic/grass.bin", 64, 64);
     loadTexture(&texLava, "/3ds/ctrmagic/lava512.bin", 512, 512);
     loadTexture(&texBrick, "/3ds/ctrmagic/brick.bin", 128, 64);
 
