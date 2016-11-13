@@ -7,6 +7,7 @@
 #include <stdio.h>
 
 #define ROUGHNESS 0.7 //0.6 //the amount of noise on the first step
+#define SCALE 20
 
 #include "diamondsquare.h"
 

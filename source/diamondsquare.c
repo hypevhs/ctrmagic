@@ -8,6 +8,11 @@ void diamondSquare(double* map, int width, int height) {
     assert(DISQ_WIDTH == DISQ_HEIGHT && isPowerOfTwo(DISQ_WIDTH-1));
     initMap(map);
     diamondSquareRecurse(map, 0, 0, DISQ_WIDTH, DISQ_HEIGHT, ROUGHNESS);
+    for (int y = 0; y < DISQ_HEIGHT; y++) {
+        for (int x = 0; x < DISQ_WIDTH; x++) {
+            map[y * DISQ_WIDTH + x] *= SCALE;
+        }
+    }
     printf("diamond square generated heightmap size (%d,%d)\n", DISQ_WIDTH, DISQ_HEIGHT);
 }
 

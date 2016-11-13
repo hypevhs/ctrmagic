@@ -207,19 +207,19 @@ static void terrainGen() {
     for (int y = 0; y < n; y++) {
         for (int x = 0; x < n; x++) {
             float realX = x;
-            float realY = (heightMap[y * n + x]) * 15;
+            float realY = heightMap[y * n + x];
             float realZ = y;
             float texScale = 4;
             float norm[] = {0, 1, 0}; //up by default
             //if we have neighboring points, calculate the normal from the "diamond"
             if (y >= 1 && y < n - 1 && x >= 1 && x < n - 1) {
                 float self = realY;
-                float uu = (heightMap[(y + 1) * n + (x + 0)]) * 15;
-                float ur = (heightMap[(y + 1) * n + (x + 1)]) * 15;
-                float rr = (heightMap[(y + 0) * n + (x + 1)]) * 15;
-                float dd = (heightMap[(y - 1) * n + (x + 0)]) * 15;
-                float dl = (heightMap[(y - 1) * n + (x - 1)]) * 15;
-                float ll = (heightMap[(y + 0) * n + (x - 1)]) * 15;
+                float uu = heightMap[(y + 1) * n + (x + 0)];
+                float ur = heightMap[(y + 1) * n + (x + 1)];
+                float rr = heightMap[(y + 0) * n + (x + 1)];
+                float dd = heightMap[(y - 1) * n + (x + 0)];
+                float dl = heightMap[(y - 1) * n + (x - 1)];
+                float ll = heightMap[(y + 0) * n + (x - 1)];
                 diamondNormal(norm, self, uu, ur, rr, dd, dl, ll);
             }
             vboTerrain[vboIdx++] = (vertex){ {realX,realY,realZ},{x*texScale,-y*texScale},{norm[0],norm[1],norm[2]} };
