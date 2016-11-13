@@ -117,7 +117,7 @@ static u32 vboCastleLength;
 static C3D_Tex texKitten;
 static C3D_Tex texLava;
 static C3D_Tex texBrick;
-static float camX = 4.0, camY = 4.0, camZ = 4.0, camRotX = M_PI / 4, camRotY = 0.0;
+static float camX = 0.0, camY = 22.0, camZ = 5.0, camRotX = 0.0, camRotY = 0.0;
 unsigned long long startTime;
 
 static void calcNormal(float norm[3], float v0[3], float v1[3], float v2[3]) {
