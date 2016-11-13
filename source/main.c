@@ -304,7 +304,7 @@ static void loadTexture(C3D_Tex* texStore, char* path, int sizeW, int sizeH) {
     //load it into c3d
     C3D_TexInit(texStore, sizeW, sizeH, GPU_RGBA8);
     C3D_TexUpload(texStore, buf);
-    C3D_TexSetFilter(texStore, GPU_LINEAR, GPU_LINEAR);
+    C3D_TexSetFilter(texStore, GPU_LINEAR, GPU_NEAREST);
     C3D_TexSetWrap(texStore, GPU_REPEAT, GPU_REPEAT);
     //free resources
     linearFree(buf);
