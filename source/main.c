@@ -90,6 +90,7 @@ static const vertex cube_vertex_list[] =
 //2 extra verts between each row are added for degenerate tris
 #define LANDSCAPE_VERTEX_COUNT ((LANDSCAPE_TILE_SIZE+1)*(LANDSCAPE_TILE_SIZE+1))
 #define LANDSCAPE_SCALE_HORIZ 2
+#define LANDSCAPE_TEXTURE_SCALE 2
 
 static DVLB_s* vshader_dvlb;
 static shaderProgram_s program;
@@ -200,7 +201,6 @@ static void terrainGen() {
             float realX = x;
             float realY = heightMap[y * n + x];
             float realZ = y;
-            float texScale = 4;
             float norm[] = {0, 1, 0}; //up by default
             //if we have neighboring points, calculate the normal from the "diamond"
             if (y >= 1 && y < n - 1 && x >= 1 && x < n - 1) {
@@ -213,7 +213,7 @@ static void terrainGen() {
                 float ll = heightMap[(y + 0) * n + (x - 1)];
                 diamondNormal(norm, self, uu, ur, rr, dd, dl, ll);
             }
-            vboTerrain[vboIdx++] = (vertex){ {realX,realY,realZ},{x*texScale,-y*texScale},{norm[0],norm[1],norm[2]} };
+            vboTerrain[vboIdx++] = (vertex){ {realX,realY,realZ},{x*LANDSCAPE_TEXTURE_SCALE,-y*LANDSCAPE_TEXTURE_SCALE},{norm[0],norm[1],norm[2]} };
         }
     }
     assert(vboIdx == LANDSCAPE_VERTEX_COUNT);
