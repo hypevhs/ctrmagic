@@ -404,7 +404,7 @@ static void sceneRender(int eye)
     // Update the uniforms
     C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_projection,   &projection);
     C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_material,     &material);
-    float lightVec[3] = { 0.3,-0.6,0.3 };
+    float lightVec[3] = { -2,-1,-2 };
     normalize(lightVec);
     C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightVec,     lightVec[0], lightVec[1], lightVec[2], 1337.0f);
     C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightHalfVec, lightVec[0], lightVec[1], lightVec[2], 1337.0f);
