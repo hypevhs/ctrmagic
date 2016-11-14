@@ -486,6 +486,29 @@ float lerp(float v0, float v1, float t) {
     return (1-t)*v0 + t*v1;
 }
 
+static inline float dot2d(float lhs[2], float rhs[2])
+{
+    return lhs[0]*rhs[0] + lhs[1]*rhs[1];
+}
+
+// Compute barycentric coordinates (u, v, w) for
+// point p with respect to triangle (a, b, c)
+static void Barycentric(float p[2], float a[2], float b[2], float c[2], float *u, float *v, float *w)
+{
+    float v0[2] = { b[0] - a[0], b[1] - a[1] };
+    float v1[2] = { c[0] - a[0], c[1] - a[1] };
+    float v2[2] = { p[0] - a[0], p[1] - a[1] };
+    float d00 = dot2d(v0, v0);
+    float d01 = dot2d(v0, v1);
+    float d11 = dot2d(v1, v1);
+    float d20 = dot2d(v2, v0);
+    float d21 = dot2d(v2, v1);
+    float denom = d00 * d11 - d01 * d01;
+    *v = (d11 * d20 - d01 * d21) / denom;
+    *w = (d00 * d21 - d01 * d20) / denom;
+    *u = 1.0f - *v - *w;
+}
+
 int main()
 {
     // Initialize graphics
@@ -556,15 +579,36 @@ int main()
         float vboTRY = vboTerrain[vboTRIdx].position[1];
         float vboBLY = vboTerrain[vboBLIdx].position[1];
         float vboBRY = vboTerrain[vboBRIdx].position[1];
-        //bilinear weighing
+        //which triangle are we on? the top or bottom half of the quad?
         float fractionalIdxX = indexX - ((long)indexX);
         float fractionalIdxZ = indexZ - ((long)indexZ);
         assert(fractionalIdxX >= 0 && fractionalIdxX <= 1);
         assert(fractionalIdxZ >= 0 && fractionalIdxZ <= 1);
-        float topLerp = lerp(vboTLY, vboTRY, fractionalIdxX);
-        float botLerp = lerp(vboBLY, vboBRY, fractionalIdxX);
-        float yLerp = lerp(topLerp, botLerp, fractionalIdxZ);
-        plrY = yLerp;
+        bool onTopHalf = (1 - fractionalIdxX) > fractionalIdxZ;
+        //get barycentric coordinates
+        float bU, bV, bW;
+        float bP[2] = { fractionalIdxX, fractionalIdxZ };
+        // c_b
+        // |/|
+        // a c <-- when false
+        float bA[2] = { 0, 1 }; //BL
+        float bB[2] = { 1, 0 }; //TR
+        float bC[2];
+        if (onTopHalf) {
+            bC[0] = 0; bC[1] = 0; //TL
+        } else {
+            bC[0] = 1; bC[1] = 1; //BR
+        }
+        Barycentric(bP, bA, bB, bC, &bU, &bV, &bW);
+        //use these coordinates as our "weights" toward each of the 3 verts in
+        //this triangle
+        //  f(p) = bA*valA + bB*valB + bC*<value of c>
+        //  f(p) = bA*vboBLY + bB*vboTRY + bC*<value of c>
+        if (onTopHalf) {
+            plrY = bU*vboBLY + bV*vboTRY + bW*vboTLY;
+        } else {
+            plrY = bU*vboBLY + bV*vboTRY + bW*vboBRY;
+        }
 
         // Render the scene twice
         C3D_RenderBufBind(&rbLeft);
