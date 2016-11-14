@@ -6,7 +6,7 @@ Result musicinit() {
 
     //init dsp
     res = ndspInit();
-    printf("ndspInit = %li\n", res);
+    if (res) { printf("couldn't ndspInit = %li\n", res); }
 
     //allocate buffer
     audioBuffer = (u32*)linearAlloc(MUSIC_BUF_LENGTH_BYTES * 2); //double buffering
@@ -22,11 +22,11 @@ Result musicinit() {
     fsread(fsHandle, fsSize, moduleBuffer);
 
     xmpres = xmp_load_module_from_memory(musicCtx, moduleBuffer, fsSize);
-    printf("xmp load module = %i\n", xmpres);
+    if (xmpres) { printf("couldn't xmp_load_module = %i\n", xmpres); }
     xmpres = xmp_start_player(musicCtx, MUSIC_SAMPLE_RATE, 0);
-    printf("xmp start player = %i\n", xmpres);
+    if (xmpres) { printf("couldn't xmp_start_player = %i\n", xmpres); }
 
-    //start dsp
+    //init dsp
     ndspSetOutputMode(NDSP_OUTPUT_STEREO);
     ndspChnSetInterp(MUSIC_CHANNEL, NDSP_INTERP_LINEAR);
     ndspChnSetRate(MUSIC_CHANNEL, MUSIC_SAMPLE_RATE);
@@ -37,15 +37,13 @@ Result musicinit() {
     mix[1] = 1.0;
     ndspChnSetMix(MUSIC_CHANNEL, mix);
 
-    printf("Started dsp\n");
-
     memset(waveBuf, 0, sizeof(waveBuf));
     waveBuf[0].data_vaddr = &audioBuffer[0];
     waveBuf[0].nsamples = MUSIC_BUF_LENGTH_SAMPLES;
     waveBuf[1].data_vaddr = &audioBuffer[MUSIC_BUF_LENGTH_SAMPLES];
     waveBuf[1].nsamples = MUSIC_BUF_LENGTH_SAMPLES;
 
-    printf("made wavebufs\n");
+    printf("initted dsp, made wavebuffers\n");
 
     return res;
 }

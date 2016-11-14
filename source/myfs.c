@@ -1,7 +1,6 @@
 #include "myfs.h"
 
 Result fsinit() {
-    printf("opening SDMC archive\n");
     FS_Path archivePath = fsMakePath(PATH_EMPTY, "");
     Result res = FSUSER_OpenArchive(&sdmcArchive, ARCHIVE_SDMC, archivePath);
     if (res) { printf("error opening SDMC archive\n"); }
@@ -19,6 +18,7 @@ void fsopen(Handle* outFileHandle, u32* outSize, char* subPath) {
     loadRes = FSFILE_GetSize(*outFileHandle, &fileSize);
     if (loadRes) { printf("error getting file size\n"); }
     *outSize = (u32)fileSize;
+    printf("done    %s\n", subPath);
 }
 
 Result fsread(Handle fileHandle, u32 size, char* intoBuf) {

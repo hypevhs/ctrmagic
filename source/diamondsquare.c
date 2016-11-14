@@ -13,7 +13,7 @@ void diamondSquare(double* map, int width, int height) {
             map[y * DISQ_WIDTH + x] *= SCALE;
         }
     }
-    printf("diamond square generated heightmap size (%d,%d)\n", DISQ_WIDTH, DISQ_HEIGHT);
+    printf("diamndsqr heightmap size (%d,%d)\n", DISQ_WIDTH, DISQ_HEIGHT);
 }
 
 int isPowerOfTwo(int x) {

@@ -169,7 +169,7 @@ static int randSeed = 54; //known seed
 
 static void terrainGen() {
     srand(randSeed);
-    printf("gen with seed %d\n", randSeed);
+    printf("diamndsqr seed = %d\n", randSeed);
     int n = (LANDSCAPE_TILE_SIZE + 1); //heightMapSize
     int hmSize = n * n;
     double* heightMap = linearAlloc(hmSize * sizeof(double));
@@ -266,11 +266,9 @@ static void loadCastleObj() {
         return;
     }
 
-    printf("num_shapes    = %d\n", num_shapes);
-    printf("num_materials = %d\n", num_materials);
-    printf("num_vertices  = %d\n", attrib.num_vertices); //unique verts defined with "v"
-    printf("num_faces     = %d\n", attrib.num_faces); //misleading; see below
-    printf("num_face_num_v= %d\n", attrib.num_face_num_verts); //actual number of triangles to draw
+    //attrib.num_vertices is unique verts defined with "v"
+    //attrib.num_faces is misleading; see below
+    //attrib.num_face_num_verts is actual number of triangles to draw
 
     //if using drawArrays, num_faces is vbo length. elseif using drawElements, it's the length of your index array
     vboCastleLength = attrib.num_faces;
@@ -337,7 +335,6 @@ static void sceneInit(void)
     //origin
     vboOrigin = linearAlloc(cube_vertex_list_count * sizeof(vertex));
     memcpy(vboOrigin, cube_vertex_list, cube_vertex_list_count * sizeof(vertex));
-    printf("made vboOrigin with %d bytes\n", cube_vertex_list_count * sizeof(vertex));
     //terrain
     terrainGen();
     //corner and index
@@ -518,7 +515,9 @@ int main()
 
     // Init the console
     consoleInit(GFX_BOTTOM, NULL);
-    printf("What's up?\n");
+    printf("========================================");
+    printf("=             Castle Scene             =");
+    printf("========================================");
 
     //init some other junk
     fsinit();
