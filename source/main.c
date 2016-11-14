@@ -540,24 +540,31 @@ int main()
 
         //snap to terrain
         float terrainOffset = (LANDSCAPE_TILE_SIZE * LANDSCAPE_SCALE_HORIZ) / 2.0;
-        int indexX = (plrX + terrainOffset) / LANDSCAPE_SCALE_HORIZ;
-        int indexZ = (plrZ + terrainOffset) / LANDSCAPE_SCALE_HORIZ;
+        float indexX = (plrX + terrainOffset) / LANDSCAPE_SCALE_HORIZ;
+        float indexZ = (plrZ + terrainOffset) / LANDSCAPE_SCALE_HORIZ;
         int vboWidth = LANDSCAPE_TILE_SIZE + 1;
         //each corner...
-        float vboTLIdx = (indexX + 0) + ((indexZ + 0) * vboWidth);
-        float vboTRIdx = (indexX + 1) + ((indexZ + 0) * vboWidth);
-        float vboBLIdx = (indexX + 0) + ((indexZ + 1) * vboWidth);
-        float vboBRIdx = (indexX + 1) + ((indexZ + 1) * vboWidth);
+        int vboTLIdx = ((int)indexX + 0) + (((int)indexZ + 0) * vboWidth);
+        int vboTRIdx = ((int)indexX + 1) + (((int)indexZ + 0) * vboWidth);
+        int vboBLIdx = ((int)indexX + 0) + (((int)indexZ + 1) * vboWidth);
+        int vboBRIdx = ((int)indexX + 1) + (((int)indexZ + 1) * vboWidth);
         assert(vboTLIdx >= 0 && vboTLIdx < LANDSCAPE_VERTEX_COUNT);
         assert(vboTRIdx >= 0 && vboTRIdx < LANDSCAPE_VERTEX_COUNT);
         assert(vboBLIdx >= 0 && vboBLIdx < LANDSCAPE_VERTEX_COUNT);
         assert(vboBRIdx >= 0 && vboBRIdx < LANDSCAPE_VERTEX_COUNT);
-        float vboTLY = vboTerrain[(int)vboTLIdx].position[1];
-        float vboTRY = vboTerrain[(int)vboTRIdx].position[1];
-        float vboBLY = vboTerrain[(int)vboBLIdx].position[1];
-        float vboBRY = vboTerrain[(int)vboBRIdx].position[1];
-        //average them
-        plrY = (vboTLY+vboTRY+vboBLY+vboBRY) / 4.0f;
+        float vboTLY = vboTerrain[vboTLIdx].position[1];
+        float vboTRY = vboTerrain[vboTRIdx].position[1];
+        float vboBLY = vboTerrain[vboBLIdx].position[1];
+        float vboBRY = vboTerrain[vboBRIdx].position[1];
+        //bilinear weighing
+        float fractionalIdxX = indexX - ((long)indexX);
+        float fractionalIdxZ = indexZ - ((long)indexZ);
+        assert(fractionalIdxX >= 0 && fractionalIdxX <= 1);
+        assert(fractionalIdxZ >= 0 && fractionalIdxZ <= 1);
+        float topLerp = lerp(vboTLY, vboTRY, fractionalIdxX);
+        float botLerp = lerp(vboBLY, vboBRY, fractionalIdxX);
+        float yLerp = lerp(topLerp, botLerp, fractionalIdxZ);
+        plrY = yLerp;
 
         // Render the scene twice
         C3D_RenderBufBind(&rbLeft);
