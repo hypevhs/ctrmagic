@@ -506,6 +506,56 @@ static void Barycentric(float p[2], float a[2], float b[2], float c[2], float *u
     *u = 1.0f - *v - *w;
 }
 
+static float pointOnTerrain(float traceX, float traceZ) {
+    //which quad are you in?
+    float terrainOffset = (LANDSCAPE_TILE_SIZE * LANDSCAPE_SCALE_HORIZ) / 2.0;
+    float indexX = (traceX + terrainOffset) / LANDSCAPE_SCALE_HORIZ;
+    float indexZ = (traceZ + terrainOffset) / LANDSCAPE_SCALE_HORIZ;
+    int vboWidth = LANDSCAPE_TILE_SIZE + 1;
+    //get height at each corner of the quad
+    int vboTLIdx = ((int)indexX + 0) + (((int)indexZ + 0) * vboWidth);
+    int vboTRIdx = ((int)indexX + 1) + (((int)indexZ + 0) * vboWidth);
+    int vboBLIdx = ((int)indexX + 0) + (((int)indexZ + 1) * vboWidth);
+    int vboBRIdx = ((int)indexX + 1) + (((int)indexZ + 1) * vboWidth);
+    assert(vboTLIdx >= 0 && vboTLIdx < LANDSCAPE_VERTEX_COUNT);
+    assert(vboTRIdx >= 0 && vboTRIdx < LANDSCAPE_VERTEX_COUNT);
+    assert(vboBLIdx >= 0 && vboBLIdx < LANDSCAPE_VERTEX_COUNT);
+    assert(vboBRIdx >= 0 && vboBRIdx < LANDSCAPE_VERTEX_COUNT);
+    float vboTLY = vboTerrain[vboTLIdx].position[1];
+    float vboTRY = vboTerrain[vboTRIdx].position[1];
+    float vboBLY = vboTerrain[vboBLIdx].position[1];
+    float vboBRY = vboTerrain[vboBRIdx].position[1];
+    //which triangle are we on? the top or bottom half of the quad?
+    float fractionalIdxX = indexX - ((long)indexX);
+    float fractionalIdxZ = indexZ - ((long)indexZ);
+    assert(fractionalIdxX >= 0 && fractionalIdxX <= 1);
+    assert(fractionalIdxZ >= 0 && fractionalIdxZ <= 1);
+    bool onTopHalf = (1 - fractionalIdxX) > fractionalIdxZ;
+    //get barycentric coordinates for the triangle
+    float bU, bV, bW;
+    float bP[2] = { fractionalIdxX, fractionalIdxZ };
+    // c_b
+    // |/|
+    // a c
+    float bA[2] = { 0, 1 }; //BL
+    float bB[2] = { 1, 0 }; //TR
+    float bC[2];
+    if (onTopHalf) {
+        bC[0] = 0; bC[1] = 0; //TL
+    } else {
+        bC[0] = 1; bC[1] = 1; //BR
+    }
+    Barycentric(bP, bA, bB, bC, &bU, &bV, &bW);
+    //use these coordinates as our "weights" toward each of the 3 verts
+    //in this triangle. that's the Y-value for the point that lies
+    //within the tri.
+    if (onTopHalf) {
+        return bU*vboBLY + bV*vboTRY + bW*vboTLY;
+    } else {
+        return bU*vboBLY + bV*vboTRY + bW*vboBRY;
+    }
+}
+
 int main()
 {
     // Initialize graphics
@@ -560,54 +610,8 @@ int main()
         plrX += howFarX * 0.05;
         plrZ += -howFarY * 0.05;
 
-        //snap to terrain
-        float terrainOffset = (LANDSCAPE_TILE_SIZE * LANDSCAPE_SCALE_HORIZ) / 2.0;
-        float indexX = (plrX + terrainOffset) / LANDSCAPE_SCALE_HORIZ;
-        float indexZ = (plrZ + terrainOffset) / LANDSCAPE_SCALE_HORIZ;
-        int vboWidth = LANDSCAPE_TILE_SIZE + 1;
-        //each corner...
-        int vboTLIdx = ((int)indexX + 0) + (((int)indexZ + 0) * vboWidth);
-        int vboTRIdx = ((int)indexX + 1) + (((int)indexZ + 0) * vboWidth);
-        int vboBLIdx = ((int)indexX + 0) + (((int)indexZ + 1) * vboWidth);
-        int vboBRIdx = ((int)indexX + 1) + (((int)indexZ + 1) * vboWidth);
-        assert(vboTLIdx >= 0 && vboTLIdx < LANDSCAPE_VERTEX_COUNT);
-        assert(vboTRIdx >= 0 && vboTRIdx < LANDSCAPE_VERTEX_COUNT);
-        assert(vboBLIdx >= 0 && vboBLIdx < LANDSCAPE_VERTEX_COUNT);
-        assert(vboBRIdx >= 0 && vboBRIdx < LANDSCAPE_VERTEX_COUNT);
-        float vboTLY = vboTerrain[vboTLIdx].position[1];
-        float vboTRY = vboTerrain[vboTRIdx].position[1];
-        float vboBLY = vboTerrain[vboBLIdx].position[1];
-        float vboBRY = vboTerrain[vboBRIdx].position[1];
-        //which triangle are we on? the top or bottom half of the quad?
-        float fractionalIdxX = indexX - ((long)indexX);
-        float fractionalIdxZ = indexZ - ((long)indexZ);
-        assert(fractionalIdxX >= 0 && fractionalIdxX <= 1);
-        assert(fractionalIdxZ >= 0 && fractionalIdxZ <= 1);
-        bool onTopHalf = (1 - fractionalIdxX) > fractionalIdxZ;
-        //get barycentric coordinates
-        float bU, bV, bW;
-        float bP[2] = { fractionalIdxX, fractionalIdxZ };
-        // c_b
-        // |/|
-        // a c <-- when false
-        float bA[2] = { 0, 1 }; //BL
-        float bB[2] = { 1, 0 }; //TR
-        float bC[2];
-        if (onTopHalf) {
-            bC[0] = 0; bC[1] = 0; //TL
-        } else {
-            bC[0] = 1; bC[1] = 1; //BR
-        }
-        Barycentric(bP, bA, bB, bC, &bU, &bV, &bW);
-        //use these coordinates as our "weights" toward each of the 3 verts in
-        //this triangle
-        //  f(p) = bA*valA + bB*valB + bC*<value of c>
-        //  f(p) = bA*vboBLY + bB*vboTRY + bC*<value of c>
-        if (onTopHalf) {
-            plrY = bU*vboBLY + bV*vboTRY + bW*vboTLY;
-        } else {
-            plrY = bU*vboBLY + bV*vboTRY + bW*vboBRY;
-        }
+        //place plrY on top of the terrain
+        plrY = pointOnTerrain(plrX, plrZ);
 
         // Render the scene twice
         C3D_RenderBufBind(&rbLeft);
