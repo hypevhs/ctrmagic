@@ -117,7 +117,7 @@ static u32 vboCastleLength;
 static C3D_Tex texKitten;
 static C3D_Tex texLava;
 static C3D_Tex texBrick;
-static float camX = 0.0, camY = 22.0, camZ = 5.0, camRotX = 0.0, camRotY = 0.0;
+static float plrX = 0, plrY = 22, plrZ = 5;
 unsigned long long startTime;
 
 static void calcNormal(float norm[3], float v0[3], float v1[3], float v2[3]) {
@@ -388,9 +388,9 @@ static void sceneRender(int eye)
     //for global camera
     C3D_Mtx camera;
     Mtx_Identity(&camera);
-    Mtx_RotateX(&camera, camRotX, true);
-    Mtx_RotateY(&camera, camRotY, true);
-    Mtx_Translate(&camera, -camX, -camY, -camZ, true);
+    Mtx_Translate(&camera, 0, 0, -3, true); //follow dist
+    Mtx_RotateX(&camera, M_PI / 8, true); //follow angle
+    Mtx_Translate(&camera, -plrX, -plrY, -plrZ, true);
     Mtx_Multiply(&projection, &projection, &camera);
 
     // Update the uniforms
@@ -420,8 +420,11 @@ static void sceneRender(int eye)
 
     //update modelview
     Mtx_Identity(&modelView);
+    Mtx_Scale(&modelView, 0.5f, 0.5f, 0.5f);
+    Mtx_Translate(&modelView, 0, 0.25f, 0, false);
+    Mtx_Translate(&modelView, plrX, plrY, plrZ, false);
     C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_modelView, &modelView);
-    //draw origin cube
+    //draw player cube
     C3D_TexBind(0, &texBrick);
     BufInfo_Init(&bufInfo);
     BufInfo_Add(&bufInfo, vboOrigin, sizeof(vertex), 3, 0x210);
@@ -531,23 +534,30 @@ int main()
         if (analog.dy < 20 && analog.dy > -20) analog.dy = 0;
         float howFarX = analog.dx / 160.0;
         float howFarY = analog.dy / 160.0; //no idea why its max and min is this
-        float unitsPerFrame = 0.1;
 
-        if (kHeld & KEY_R)
-        {
-            camRotX += -howFarY * 0.03;
-            camRotY += howFarX * 0.03;
-        }
-        else if (kHeld & KEY_Y)
-        {
-            camX += howFarX * unitsPerFrame;
-            camY += howFarY * unitsPerFrame;
-        }
-        else
-        {
-            camX += howFarX * unitsPerFrame;
-            camZ += -howFarY * unitsPerFrame;
-        }
+        plrX += howFarX * 0.05;
+        plrZ += -howFarY * 0.05;
+
+        //snap to terrain
+        float terrainOffset = (LANDSCAPE_TILE_SIZE * LANDSCAPE_SCALE_HORIZ) / 2.0;
+        int indexX = (plrX + terrainOffset) / LANDSCAPE_SCALE_HORIZ;
+        int indexZ = (plrZ + terrainOffset) / LANDSCAPE_SCALE_HORIZ;
+        int vboWidth = LANDSCAPE_TILE_SIZE + 1;
+        //each corner...
+        float vboTLIdx = (indexX + 0) + ((indexZ + 0) * vboWidth);
+        float vboTRIdx = (indexX + 1) + ((indexZ + 0) * vboWidth);
+        float vboBLIdx = (indexX + 0) + ((indexZ + 1) * vboWidth);
+        float vboBRIdx = (indexX + 1) + ((indexZ + 1) * vboWidth);
+        assert(vboTLIdx >= 0 && vboTLIdx < LANDSCAPE_VERTEX_COUNT);
+        assert(vboTRIdx >= 0 && vboTRIdx < LANDSCAPE_VERTEX_COUNT);
+        assert(vboBLIdx >= 0 && vboBLIdx < LANDSCAPE_VERTEX_COUNT);
+        assert(vboBRIdx >= 0 && vboBRIdx < LANDSCAPE_VERTEX_COUNT);
+        float vboTLY = vboTerrain[(int)vboTLIdx].position[1];
+        float vboTRY = vboTerrain[(int)vboTRIdx].position[1];
+        float vboBLY = vboTerrain[(int)vboBLIdx].position[1];
+        float vboBRY = vboTerrain[(int)vboBRIdx].position[1];
+        //average them
+        plrY = (vboTLY+vboTRY+vboBLY+vboBRY) / 4.0f;
 
         // Render the scene twice
         C3D_RenderBufBind(&rbLeft);
