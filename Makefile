@@ -54,7 +54,7 @@ LIBS	:= -lcitro3d -lctru -lxmp-lite -lm
 # list of directories containing libraries, this must be the top level containing
 # include and lib
 #---------------------------------------------------------------------------------
-LIBDIRS	:= $(CTRULIB) $(CURDIR)/../.. $(DEVKITPRO)/3ds_portlibs/libxmp-lite-4.3.10
+LIBDIRS	:= $(CTRULIB) $(CURDIR)/../.. $(DEVKITPRO)/portlibs/armv6k
 
 
 #---------------------------------------------------------------------------------
