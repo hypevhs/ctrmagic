@@ -89,7 +89,7 @@ static const vertex cube_vertex_list[] =
 #define LANDSCAPE_INDEX_COUNT (((LANDSCAPE_TILE_SIZE+1)*LANDSCAPE_TILE_SIZE*2) + ((LANDSCAPE_TILE_SIZE-1)*2))
 //2 extra verts between each row are added for degenerate tris
 #define LANDSCAPE_VERTEX_COUNT ((LANDSCAPE_TILE_SIZE+1)*(LANDSCAPE_TILE_SIZE+1))
-#define LANDSCAPE_SCALE_HORIZ 2
+#define LANDSCAPE_SCALE_HORIZ 4
 #define LANDSCAPE_TEXTURE_SCALE 2
 
 static DVLB_s* vshader_dvlb;
@@ -663,17 +663,6 @@ int main()
         plrXNext += sinf(plrRot) * plrSpeedHoriz;
         plrZNext += cosf(plrRot) * -plrSpeedHoriz;
         plrYNext += plrSpeedVert;
-
-        /*
-        //scale the nextpos vector to current speed
-        float diffX = plrXNext - plrX;
-        float diffY = plrYNext - plrY;
-        float diffZ = plrZNext - plrZ;
-        float nextDist = sqrtf(diffX*diffX + diffY*diffY + diffZ*diffZ);
-        plrXNext *= plrSpeedHoriz/nextDist;
-        plrYNext *= plrSpeedHoriz/nextDist;
-        plrZNext *= plrSpeedHoriz/nextDist;
-        */
 
         //get terrain point there
         float terrainUnderYou = pointOnTerrain(plrXNext, plrZNext);
