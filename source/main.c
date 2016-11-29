@@ -118,6 +118,11 @@ static C3D_Tex texKitten;
 static C3D_Tex texLava;
 static C3D_Tex texBrick;
 static float plrX = 0, plrY = 22, plrZ = 5;
+static float plrRot = 0;
+static float plrSpeedHoriz = 0, plrSpeedVert = 0;
+#define PLRHACCEL 0.001
+#define PLRMAXSPEED 0.2
+#define PLRGRAVITY 0.004
 unsigned long long startTime;
 
 static void calcNormal(float norm[3], float v0[3], float v1[3], float v2[3]) {
@@ -387,6 +392,7 @@ static void sceneRender(int eye)
     Mtx_Identity(&camera);
     Mtx_Translate(&camera, 0, 0, -3, true); //follow dist
     Mtx_RotateX(&camera, M_PI / 8, true); //follow angle
+    Mtx_RotateY(&camera, plrRot, true);
     Mtx_Translate(&camera, -plrX, -plrY, -plrZ, true);
     Mtx_Multiply(&projection, &projection, &camera);
 
@@ -418,6 +424,7 @@ static void sceneRender(int eye)
     //update modelview
     Mtx_Identity(&modelView);
     Mtx_Scale(&modelView, 0.5f, 0.5f, 0.5f);
+    Mtx_RotateY(&modelView, -plrRot, false);
     Mtx_Translate(&modelView, 0, 0.25f, 0, false);
     Mtx_Translate(&modelView, plrX, plrY, plrZ, false);
     C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_modelView, &modelView);
@@ -556,6 +563,36 @@ static float pointOnTerrain(float traceX, float traceZ) {
     }
 }
 
+static void normalOnTerrain(float normOut[3], float traceX, float traceZ) {
+    //which quad are you in?
+    float terrainOffset = (LANDSCAPE_TILE_SIZE * LANDSCAPE_SCALE_HORIZ) / 2.0;
+    float indexX = (traceX + terrainOffset) / LANDSCAPE_SCALE_HORIZ;
+    float indexZ = (traceZ + terrainOffset) / LANDSCAPE_SCALE_HORIZ;
+    int vboWidth = LANDSCAPE_TILE_SIZE + 1;
+    //get height at each corner of the quad
+    int vboTLIdx = ((int)indexX + 0) + (((int)indexZ + 0) * vboWidth);
+    int vboTRIdx = ((int)indexX + 1) + (((int)indexZ + 0) * vboWidth);
+    int vboBLIdx = ((int)indexX + 0) + (((int)indexZ + 1) * vboWidth);
+    int vboBRIdx = ((int)indexX + 1) + (((int)indexZ + 1) * vboWidth);
+    assert(vboTLIdx >= 0 && vboTLIdx < LANDSCAPE_VERTEX_COUNT);
+    assert(vboTRIdx >= 0 && vboTRIdx < LANDSCAPE_VERTEX_COUNT);
+    assert(vboBLIdx >= 0 && vboBLIdx < LANDSCAPE_VERTEX_COUNT);
+    assert(vboBRIdx >= 0 && vboBRIdx < LANDSCAPE_VERTEX_COUNT);
+    //which triangle are we on? the top or bottom half of the quad?
+    float fractionalIdxX = indexX - ((long)indexX);
+    float fractionalIdxZ = indexZ - ((long)indexZ);
+    assert(fractionalIdxX >= 0 && fractionalIdxX <= 1);
+    assert(fractionalIdxZ >= 0 && fractionalIdxZ <= 1);
+    bool onTopHalf = (1 - fractionalIdxX) > fractionalIdxZ;
+    if (onTopHalf) {
+        //topright, topleft, bottomleft
+        calcNormal(normOut, vboTerrain[vboTRIdx].position, vboTerrain[vboTLIdx].position, vboTerrain[vboBLIdx].position);
+    } else {
+        //topright, bottomleft, bottomright
+        calcNormal(normOut, vboTerrain[vboTRIdx].position, vboTerrain[vboBLIdx].position, vboTerrain[vboBRIdx].position);
+    }
+}
+
 int main()
 {
     // Initialize graphics
@@ -607,11 +644,52 @@ int main()
         float howFarX = analog.dx / 160.0;
         float howFarY = analog.dy / 160.0; //no idea why its max and min is this
 
-        plrX += howFarX * 0.05;
-        plrZ += -howFarY * 0.05;
+        //rotate player
+        plrRot += howFarX * 0.05;
 
-        //place plrY on top of the terrain
-        plrY = pointOnTerrain(plrX, plrZ);
+        //update speeds
+        plrSpeedVert -= PLRGRAVITY;
+        if (kHeld & KEY_A) {
+            plrSpeedHoriz += PLRHACCEL;
+        } else {
+            plrSpeedHoriz -= PLRHACCEL;
+        }
+        plrSpeedHoriz = fmaxf(0, fminf(PLRMAXSPEED, plrSpeedHoriz));
+
+        //calculate next position
+        float plrXNext = plrX;
+        float plrYNext = plrY;
+        float plrZNext = plrZ;
+        plrXNext += sinf(plrRot) * plrSpeedHoriz;
+        plrZNext += cosf(plrRot) * -plrSpeedHoriz;
+        plrYNext += plrSpeedVert;
+
+        /*
+        //scale the nextpos vector to current speed
+        float diffX = plrXNext - plrX;
+        float diffY = plrYNext - plrY;
+        float diffZ = plrZNext - plrZ;
+        float nextDist = sqrtf(diffX*diffX + diffY*diffY + diffZ*diffZ);
+        plrXNext *= plrSpeedHoriz/nextDist;
+        plrYNext *= plrSpeedHoriz/nextDist;
+        plrZNext *= plrSpeedHoriz/nextDist;
+        */
+
+        //get terrain point there
+        float terrainUnderYou = pointOnTerrain(plrXNext, plrZNext);
+
+        //if less than terrain point, snap to terrain
+        if (plrYNext < terrainUnderYou) {
+            plrYNext = terrainUnderYou;
+        }
+
+        //carry vertical ground movement momentum into aerial
+        plrSpeedVert = plrYNext - plrY;
+
+        //set positions
+        plrX = plrXNext;
+        plrY = plrYNext;
+        plrZ = plrZNext;
 
         // Render the scene twice
         C3D_RenderBufBind(&rbLeft);
