@@ -478,7 +478,16 @@ static void sceneRender(int eye)
     //update modelview
     Mtx_Identity(&modelView);
     Mtx_Scale(&modelView, 0.5f, 0.5f, 0.5f);
-    Mtx_RotateY(&modelView, -plrRot, false);
+    float norm[3];
+    normalOnTerrain(norm, plrX, plrZ);
+    C3D_FVec src = FVec3_New(plrX, plrY, plrZ);
+    C3D_FVec dst = FVec3_New(plrX+norm[0], plrY+norm[1], plrZ+norm[2]);
+    C3D_FVec fwd = FVec3_New(0,0,-1);
+    C3D_FVec up = FVec3_New(0,1,0);
+    C3D_FQuat rotate = Quat_LookAt(src, dst, fwd, up);
+    C3D_Mtx rotateMtx;
+    Mtx_FromQuat(&rotateMtx, rotate);
+    Mtx_Multiply(&modelView, &rotateMtx, &modelView);
     Mtx_Translate(&modelView, 0, 0.25f, 0, false);
     Mtx_Translate(&modelView, plrX, plrY, plrZ, false);
     C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_modelView, &modelView);
