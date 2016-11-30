@@ -488,6 +488,7 @@ static void sceneRender(int eye)
     C3D_Mtx rotateMtx;
     Mtx_FromQuat(&rotateMtx, rotate);
     Mtx_Multiply(&modelView, &rotateMtx, &modelView);
+    Mtx_Rotate(&modelView, dst, -plrRot, false); //rotate about normal to face camera-forward
     Mtx_Translate(&modelView, 0, 0.25f, 0, false);
     Mtx_Translate(&modelView, plrX, plrY, plrZ, false);
     C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_modelView, &modelView);
