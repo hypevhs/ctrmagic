@@ -675,7 +675,7 @@ int main()
         if (analog.dx < 20 && analog.dx > -20) analog.dx = 0; //deadzones
         if (analog.dy < 20 && analog.dy > -20) analog.dy = 0;
         float howFarX = analog.dx / 160.0;
-        float howFarY = analog.dy / 160.0; //no idea why its max and min is this
+        //float howFarY = analog.dy / 160.0; //no idea why its max and min is this
 
         if (kDown & KEY_L) {
             float norm[3];
