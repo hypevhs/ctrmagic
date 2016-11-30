@@ -677,6 +677,13 @@ int main()
         float howFarX = analog.dx / 160.0;
         float howFarY = analog.dy / 160.0; //no idea why its max and min is this
 
+        if (kDown & KEY_L) {
+            float norm[3];
+            normalOnTerrain(norm, plrX, plrZ);
+            printf("Pos : [%.3f %.3f %.3f]\n", plrX, plrY, plrZ);
+            printf("Norm: [%.3f %.3f %.3f]\n", norm[0], norm[1], norm[2]);
+        }
+
         //rotate player
         plrRot += howFarX * 0.05;
 
