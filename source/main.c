@@ -125,6 +125,14 @@ static float plrSpeedHoriz = 0, plrSpeedVert = 0;
 #define PLRGRAVITY 0.004
 unsigned long long startTime;
 
+//produce a unit vector
+void normalize(float v[3]) {
+    float length = sqrtf(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
+    v[0] /= length;
+    v[1] /= length;
+    v[2] /= length;
+}
+
 static void calcNormal(float norm[3], float v0[3], float v1[3], float v2[3]) {
     //u = p1 - p0
     float uA[3] = {
@@ -369,14 +377,6 @@ static void sceneInit(void)
     C3D_TexEnvOp(env, C3D_Both, 0, 0, 0);
     C3D_TexEnvFunc(env, C3D_Both, GPU_MODULATE);
     printf("done initializing scene\n");
-}
-
-//produce a unit vector
-void normalize(float v[3]) {
-    float length = sqrtf(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
-    v[0] /= length;
-    v[1] /= length;
-    v[2] /= length;
 }
 
 static void sceneRender(int eye)
