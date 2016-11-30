@@ -151,6 +151,60 @@ static void calcNormal(float norm[3], float v0[3], float v1[3], float v2[3]) {
     norm[2] = uA[0]*vA[1] - uA[1]*vA[0];
 }
 
+static void normalOnTerrain(float normOut[3], float traceX, float traceZ) {
+    //which quad are you in?
+    float terrainOffset = (LANDSCAPE_TILE_SIZE * LANDSCAPE_SCALE_HORIZ) / 2.0;
+    float indexX = (traceX + terrainOffset) / LANDSCAPE_SCALE_HORIZ;
+    float indexZ = (traceZ + terrainOffset) / LANDSCAPE_SCALE_HORIZ;
+    int vboWidth = LANDSCAPE_TILE_SIZE + 1;
+    //get height at each corner of the quad
+    int vboTLIdx = ((int)indexX + 0) + (((int)indexZ + 0) * vboWidth);
+    int vboTRIdx = ((int)indexX + 1) + (((int)indexZ + 0) * vboWidth);
+    int vboBLIdx = ((int)indexX + 0) + (((int)indexZ + 1) * vboWidth);
+    int vboBRIdx = ((int)indexX + 1) + (((int)indexZ + 1) * vboWidth);
+    assert(vboTLIdx >= 0 && vboTLIdx < LANDSCAPE_VERTEX_COUNT);
+    assert(vboTRIdx >= 0 && vboTRIdx < LANDSCAPE_VERTEX_COUNT);
+    assert(vboBLIdx >= 0 && vboBLIdx < LANDSCAPE_VERTEX_COUNT);
+    assert(vboBRIdx >= 0 && vboBRIdx < LANDSCAPE_VERTEX_COUNT);
+    //which triangle are we on? the top or bottom half of the quad?
+    float fractionalIdxX = indexX - ((long)indexX);
+    float fractionalIdxZ = indexZ - ((long)indexZ);
+    assert(fractionalIdxX >= 0 && fractionalIdxX <= 1);
+    assert(fractionalIdxZ >= 0 && fractionalIdxZ <= 1);
+    bool onTopHalf = (1 - fractionalIdxX) > fractionalIdxZ;
+
+    float TRPos[3];
+    float TLPos[3];
+    float BLPos[3];
+    float BRPos[3];
+
+    memcpy(TRPos, vboTerrain[vboTRIdx].position, 3*sizeof(float));
+    memcpy(TLPos, vboTerrain[vboTLIdx].position, 3*sizeof(float));
+    memcpy(BLPos, vboTerrain[vboBLIdx].position, 3*sizeof(float));
+    memcpy(BRPos, vboTerrain[vboBRIdx].position, 3*sizeof(float));
+
+    //because the scale of the terrain affects the normal, but the
+    //scale is a mtx trans, we apply it manually
+    TRPos[0] *= LANDSCAPE_SCALE_HORIZ;
+    TRPos[2] *= LANDSCAPE_SCALE_HORIZ;
+    TLPos[0] *= LANDSCAPE_SCALE_HORIZ;
+    TLPos[2] *= LANDSCAPE_SCALE_HORIZ;
+    BLPos[0] *= LANDSCAPE_SCALE_HORIZ;
+    BLPos[2] *= LANDSCAPE_SCALE_HORIZ;
+    BRPos[0] *= LANDSCAPE_SCALE_HORIZ;
+    BRPos[2] *= LANDSCAPE_SCALE_HORIZ;
+
+    if (onTopHalf) {
+        //topright, topleft, bottomleft
+        calcNormal(normOut, TRPos, TLPos, BLPos);
+    } else {
+        //topright, bottomleft, bottomright
+        calcNormal(normOut, TRPos, BLPos, BRPos);
+    }
+
+    normalize(normOut);
+}
+
 /*
 mesh around # looks like this. use these points to calculate avg face normal
    .-.
@@ -560,36 +614,6 @@ static float pointOnTerrain(float traceX, float traceZ) {
         return bU*vboBLY + bV*vboTRY + bW*vboTLY;
     } else {
         return bU*vboBLY + bV*vboTRY + bW*vboBRY;
-    }
-}
-
-static void normalOnTerrain(float normOut[3], float traceX, float traceZ) {
-    //which quad are you in?
-    float terrainOffset = (LANDSCAPE_TILE_SIZE * LANDSCAPE_SCALE_HORIZ) / 2.0;
-    float indexX = (traceX + terrainOffset) / LANDSCAPE_SCALE_HORIZ;
-    float indexZ = (traceZ + terrainOffset) / LANDSCAPE_SCALE_HORIZ;
-    int vboWidth = LANDSCAPE_TILE_SIZE + 1;
-    //get height at each corner of the quad
-    int vboTLIdx = ((int)indexX + 0) + (((int)indexZ + 0) * vboWidth);
-    int vboTRIdx = ((int)indexX + 1) + (((int)indexZ + 0) * vboWidth);
-    int vboBLIdx = ((int)indexX + 0) + (((int)indexZ + 1) * vboWidth);
-    int vboBRIdx = ((int)indexX + 1) + (((int)indexZ + 1) * vboWidth);
-    assert(vboTLIdx >= 0 && vboTLIdx < LANDSCAPE_VERTEX_COUNT);
-    assert(vboTRIdx >= 0 && vboTRIdx < LANDSCAPE_VERTEX_COUNT);
-    assert(vboBLIdx >= 0 && vboBLIdx < LANDSCAPE_VERTEX_COUNT);
-    assert(vboBRIdx >= 0 && vboBRIdx < LANDSCAPE_VERTEX_COUNT);
-    //which triangle are we on? the top or bottom half of the quad?
-    float fractionalIdxX = indexX - ((long)indexX);
-    float fractionalIdxZ = indexZ - ((long)indexZ);
-    assert(fractionalIdxX >= 0 && fractionalIdxX <= 1);
-    assert(fractionalIdxZ >= 0 && fractionalIdxZ <= 1);
-    bool onTopHalf = (1 - fractionalIdxX) > fractionalIdxZ;
-    if (onTopHalf) {
-        //topright, topleft, bottomleft
-        calcNormal(normOut, vboTerrain[vboTRIdx].position, vboTerrain[vboTLIdx].position, vboTerrain[vboBLIdx].position);
-    } else {
-        //topright, bottomleft, bottomright
-        calcNormal(normOut, vboTerrain[vboTRIdx].position, vboTerrain[vboBLIdx].position, vboTerrain[vboBRIdx].position);
     }
 }
 
