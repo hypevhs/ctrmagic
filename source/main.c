@@ -120,6 +120,7 @@ static C3D_Tex texBrick;
 static float plrX = 0, plrY = 22, plrZ = 5;
 static float plrRot = 0;
 static float plrSpeedHoriz = 0, plrSpeedVert = 0;
+static bool plrAerial = true;
 #define PLRHACCEL 0.001
 #define PLRMAXSPEED 0.2
 #define PLRGRAVITY 0.004
@@ -478,16 +479,22 @@ static void sceneRender(int eye)
     //update modelview
     Mtx_Identity(&modelView);
     Mtx_Scale(&modelView, 0.5f, 0.5f, 0.5f);
-    float norm[3];
-    normalOnTerrain(norm, plrX, plrZ);
-    C3D_FVec src = FVec3_New(0, 0, 0);
-    C3D_FVec dst = FVec3_New(norm[0], norm[1], norm[2]);
-    C3D_FVec fwd = FVec3_New(0,0,-1);
-    C3D_FVec up = FVec3_New(0,1,0);
-    C3D_FQuat rotate = Quat_LookAt(src, dst, fwd, up);
-    C3D_Mtx rotateMtx;
-    Mtx_FromQuat(&rotateMtx, rotate);
-    Mtx_Multiply(&modelView, &rotateMtx, &modelView);
+
+    C3D_FVec dst;
+    if (!plrAerial) {
+        float norm[3];
+        normalOnTerrain(norm, plrX, plrZ);
+        C3D_FVec src = FVec3_New(0, 0, 0);
+        dst = FVec3_New(norm[0], norm[1], norm[2]);
+        C3D_FVec fwd = FVec3_New(0,0,-1);
+        C3D_FVec up = FVec3_New(0,1,0);
+        C3D_FQuat rotate = Quat_LookAt(src, dst, fwd, up);
+        C3D_Mtx rotateMtx;
+        Mtx_FromQuat(&rotateMtx, rotate);
+        Mtx_Multiply(&modelView, &rotateMtx, &modelView);
+    } else {
+        dst = FVec3_New(0,1,0);
+    }
     Mtx_Rotate(&modelView, dst, -plrRot, false); //rotate about normal to face camera-forward
     Mtx_Translate(&modelView, 0, 0.25f, 0, false);
     Mtx_Translate(&modelView, plrX, plrY, plrZ, false);
@@ -681,8 +688,9 @@ int main()
         if (kDown & KEY_L) {
             float norm[3];
             normalOnTerrain(norm, plrX, plrZ);
-            printf("Pos : [%.3f %.3f %.3f]\n", plrX, plrY, plrZ);
-            printf("Norm: [%.3f %.3f %.3f]\n", norm[0], norm[1], norm[2]);
+            printf("Pos   : [%.3f %.3f %.3f]\n", plrX, plrY, plrZ);
+            printf("Norm  : [%.3f %.3f %.3f]\n", norm[0], norm[1], norm[2]);
+            printf("Aerial: [%s]\n", plrAerial ? "true" : "false");
         }
 
         //rotate player
@@ -711,6 +719,9 @@ int main()
         //if less than terrain point, snap to terrain
         if (plrYNext < terrainUnderYou) {
             plrYNext = terrainUnderYou;
+            plrAerial = false;
+        } else {
+            plrAerial = true;
         }
 
         //carry vertical ground movement momentum into aerial
