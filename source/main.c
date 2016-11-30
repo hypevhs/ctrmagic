@@ -480,8 +480,8 @@ static void sceneRender(int eye)
     Mtx_Scale(&modelView, 0.5f, 0.5f, 0.5f);
     float norm[3];
     normalOnTerrain(norm, plrX, plrZ);
-    C3D_FVec src = FVec3_New(plrX, plrY, plrZ);
-    C3D_FVec dst = FVec3_New(plrX+norm[0], plrY+norm[1], plrZ+norm[2]);
+    C3D_FVec src = FVec3_New(0, 0, 0);
+    C3D_FVec dst = FVec3_New(norm[0], norm[1], norm[2]);
     C3D_FVec fwd = FVec3_New(0,0,-1);
     C3D_FVec up = FVec3_New(0,1,0);
     C3D_FQuat rotate = Quat_LookAt(src, dst, fwd, up);
