@@ -634,6 +634,64 @@ static float pointOnTerrain(float traceX, float traceZ) {
     }
 }
 
+void updateScene() {
+    u32 kDown = hidKeysDown();
+    u32 kHeld = hidKeysHeld();
+    circlePosition analog;
+    hidCircleRead(&analog);
+    if (analog.dx < 20 && analog.dx > -20) analog.dx = 0; //deadzones
+    if (analog.dy < 20 && analog.dy > -20) analog.dy = 0;
+    float howFarX = analog.dx / 160.0;
+    //float howFarY = analog.dy / 160.0; //no idea why its max and min is this
+
+    if (kDown & KEY_L) {
+        float norm[3];
+        normalOnTerrain(norm, plrX, plrZ);
+        printf("Pos   : [%.3f %.3f %.3f]\n", plrX, plrY, plrZ);
+        printf("Norm  : [%.3f %.3f %.3f]\n", norm[0], norm[1], norm[2]);
+        printf("Aerial: [%s]\n", plrAerial ? "true" : "false");
+    }
+
+    //rotate player
+    plrRot += howFarX * 0.05;
+
+    //update speeds
+    plrSpeedVert -= PLRGRAVITY;
+    if (kHeld & KEY_A) {
+        plrSpeedHoriz += PLRHACCEL;
+    } else {
+        plrSpeedHoriz -= PLRHACCEL;
+    }
+    plrSpeedHoriz = fmaxf(0, fminf(PLRMAXSPEED, plrSpeedHoriz));
+
+    //calculate next position
+    float plrXNext = plrX;
+    float plrYNext = plrY;
+    float plrZNext = plrZ;
+    plrXNext += sinf(plrRot) * plrSpeedHoriz;
+    plrZNext += cosf(plrRot) * -plrSpeedHoriz;
+    plrYNext += plrSpeedVert;
+
+    //get terrain point there
+    float terrainUnderYou = pointOnTerrain(plrXNext, plrZNext);
+
+    //if less than terrain point, snap to terrain
+    if (plrYNext < terrainUnderYou) {
+        plrYNext = terrainUnderYou;
+        plrAerial = false;
+    } else {
+        plrAerial = true;
+    }
+
+    //carry vertical ground movement momentum into aerial
+    plrSpeedVert = plrYNext - plrY;
+
+    //set positions
+    plrX = plrXNext;
+    plrY = plrYNext;
+    plrZ = plrZNext;
+}
+
 int main()
 {
     // Initialize graphics
@@ -674,63 +732,10 @@ int main()
 
         // Respond to user input
         u32 kDown = hidKeysDown();
-        u32 kHeld = hidKeysHeld();
         if (kDown & KEY_START)
             break; // break in order to return to hbmenu
 
-        circlePosition analog;
-        hidCircleRead(&analog);
-        if (analog.dx < 20 && analog.dx > -20) analog.dx = 0; //deadzones
-        if (analog.dy < 20 && analog.dy > -20) analog.dy = 0;
-        float howFarX = analog.dx / 160.0;
-        //float howFarY = analog.dy / 160.0; //no idea why its max and min is this
-
-        if (kDown & KEY_L) {
-            float norm[3];
-            normalOnTerrain(norm, plrX, plrZ);
-            printf("Pos   : [%.3f %.3f %.3f]\n", plrX, plrY, plrZ);
-            printf("Norm  : [%.3f %.3f %.3f]\n", norm[0], norm[1], norm[2]);
-            printf("Aerial: [%s]\n", plrAerial ? "true" : "false");
-        }
-
-        //rotate player
-        plrRot += howFarX * 0.05;
-
-        //update speeds
-        plrSpeedVert -= PLRGRAVITY;
-        if (kHeld & KEY_A) {
-            plrSpeedHoriz += PLRHACCEL;
-        } else {
-            plrSpeedHoriz -= PLRHACCEL;
-        }
-        plrSpeedHoriz = fmaxf(0, fminf(PLRMAXSPEED, plrSpeedHoriz));
-
-        //calculate next position
-        float plrXNext = plrX;
-        float plrYNext = plrY;
-        float plrZNext = plrZ;
-        plrXNext += sinf(plrRot) * plrSpeedHoriz;
-        plrZNext += cosf(plrRot) * -plrSpeedHoriz;
-        plrYNext += plrSpeedVert;
-
-        //get terrain point there
-        float terrainUnderYou = pointOnTerrain(plrXNext, plrZNext);
-
-        //if less than terrain point, snap to terrain
-        if (plrYNext < terrainUnderYou) {
-            plrYNext = terrainUnderYou;
-            plrAerial = false;
-        } else {
-            plrAerial = true;
-        }
-
-        //carry vertical ground movement momentum into aerial
-        plrSpeedVert = plrYNext - plrY;
-
-        //set positions
-        plrX = plrXNext;
-        plrY = plrYNext;
-        plrZ = plrZNext;
+        updateScene();
 
         // Render the scene twice
         C3D_RenderBufBind(&rbLeft);
