@@ -118,9 +118,10 @@ static C3D_Tex texKitten;
 static C3D_Tex texLava;
 static C3D_Tex texBrick;
 static float plrX = 0, plrY = 22, plrZ = 5;
-static float plrRot = 0;
+static float plrRotFacing = 0;
 static float plrSpeedHoriz = 0, plrSpeedVert = 0;
 static bool plrAerial = true;
+static C3D_FQuat plrRot = {0,0,0,1};
 #define PLRHACCEL 0.001
 #define PLRMAXSPEED 0.2
 #define PLRGRAVITY 0.004
@@ -447,7 +448,7 @@ static void sceneRender(int eye)
     Mtx_Identity(&camera);
     Mtx_Translate(&camera, 0, 0, -3, true); //follow dist
     Mtx_RotateX(&camera, M_PI / 8, true); //follow angle
-    Mtx_RotateY(&camera, plrRot, true);
+    Mtx_RotateY(&camera, plrRotFacing, true);
     Mtx_Translate(&camera, -plrX, -plrY, -plrZ, true);
     Mtx_Multiply(&projection, &projection, &camera);
 
@@ -480,22 +481,9 @@ static void sceneRender(int eye)
     Mtx_Identity(&modelView);
     Mtx_Scale(&modelView, 0.5f, 0.5f, 0.5f);
 
-    C3D_FVec dst;
-    if (!plrAerial) {
-        float norm[3];
-        normalOnTerrain(norm, plrX, plrZ);
-        C3D_FVec src = FVec3_New(0, 0, 0);
-        dst = FVec3_New(norm[0], norm[1], norm[2]);
-        C3D_FVec fwd = FVec3_New(0,0,-1);
-        C3D_FVec up = FVec3_New(0,1,0);
-        C3D_FQuat rotate = Quat_LookAt(src, dst, fwd, up);
-        C3D_Mtx rotateMtx;
-        Mtx_FromQuat(&rotateMtx, rotate);
-        Mtx_Multiply(&modelView, &rotateMtx, &modelView);
-    } else {
-        dst = FVec3_New(0,1,0);
-    }
-    Mtx_Rotate(&modelView, dst, -plrRot, false); //rotate about normal to face camera-forward
+    C3D_Mtx rotateMtx;
+    Mtx_FromQuat(&rotateMtx, plrRot);
+    Mtx_Multiply(&modelView, &rotateMtx, &modelView);
     Mtx_Translate(&modelView, 0, 0.25f, 0, false);
     Mtx_Translate(&modelView, plrX, plrY, plrZ, false);
     C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_modelView, &modelView);
@@ -653,7 +641,7 @@ void updateScene() {
     }
 
     //rotate player
-    plrRot += howFarX * 0.05;
+    plrRotFacing += howFarX * 0.05;
 
     //update speeds
     plrSpeedVert -= PLRGRAVITY;
@@ -668,8 +656,8 @@ void updateScene() {
     float plrXNext = plrX;
     float plrYNext = plrY;
     float plrZNext = plrZ;
-    plrXNext += sinf(plrRot) * plrSpeedHoriz;
-    plrZNext += cosf(plrRot) * -plrSpeedHoriz;
+    plrXNext += sinf(plrRotFacing) * plrSpeedHoriz;
+    plrZNext += cosf(plrRotFacing) * -plrSpeedHoriz;
     plrYNext += plrSpeedVert;
 
     //get terrain point there
@@ -690,6 +678,18 @@ void updateScene() {
     plrX = plrXNext;
     plrY = plrYNext;
     plrZ = plrZNext;
+
+    //update rotation quat if on ground
+    if (!plrAerial) {
+        float norm[3];
+        normalOnTerrain(norm, plrX, plrZ);
+        C3D_FVec src = FVec3_New(0, 0, 0);
+        C3D_FVec dst = FVec3_New(norm[0], norm[1], norm[2]);
+        C3D_FVec fwd = FVec3_New(0,0,-1);
+        C3D_FVec up = FVec3_New(0,1,0);
+        plrRot = Quat_LookAt(src, dst, fwd, up);
+        plrRot = Quat_Rotate(plrRot, dst, -plrRotFacing, true); //rotate about normal to face camera-forward
+    }
 }
 
 int main()
