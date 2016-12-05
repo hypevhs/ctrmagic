@@ -128,7 +128,7 @@ static float plrX = 0, plrY = 22, plrZ = 5;
 static float plrRotFacing = 0;
 static float plrSpeedHoriz = 0, plrSpeedVert = 0;
 static bool plrAerial = true;
-static C3D_FQuat plrRot = {0,0,0,1};
+static C3D_FQuat plrRot = {{0,0,0,1}};
 #define PLRHACCEL 0.001
 #define PLRMAXSPEED 0.2
 #define PLRGRAVITY 0.004
