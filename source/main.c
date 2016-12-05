@@ -490,7 +490,7 @@ static void sceneRender(int eye)
 
     //update modelview
     Mtx_Identity(&modelView);
-    Mtx_Scale(&modelView, 0.1f, 0.1f, 0.1f);
+    Mtx_Scale(&modelView, 0.05f, 0.05f, 0.05f);
     C3D_Mtx rotateMtx;
     Mtx_FromQuat(&rotateMtx, plrRot);
     Mtx_Multiply(&modelView, &rotateMtx, &modelView);
@@ -701,6 +701,12 @@ void updateScene() {
         C3D_FVec up = FVec3_New(0,1,0);
         plrRot = Quat_LookAt(src, dst, fwd, up);
         plrRot = Quat_Rotate(plrRot, dst, -plrRotFacing, true); //rotate about normal to face camera-forward
+
+        //fix model: rot 90 about X, then 180 about Y
+        C3D_FVec xPlus = FVec3_New(1,0,0);
+        C3D_FVec yPlus = FVec3_New(0,1,0);
+        plrRot = Quat_Rotate(plrRot, xPlus, -M_PI_2, false);
+        plrRot = Quat_Rotate(plrRot, yPlus, M_PI, false);
     }
 }
 
