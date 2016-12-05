@@ -107,16 +107,23 @@ static C3D_Mtx material =
     }
 };
 
+//generated/hardcoded vbos
 static vertex* vboTerrain;
 static u16* vboTerrainIndex;
 static vertex* vboOrigin;
 static vertex* vboCorner;
 static u16* vboCornerIndex;
+//obj vbos
 static vertex* vboCastle;
 static u32 vboCastleLength;
+static vertex* vboPlr;
+static u32 vboPlrLength;
+//textures
 static C3D_Tex texKitten;
 static C3D_Tex texLava;
 static C3D_Tex texBrick;
+static C3D_Tex texPlr;
+//state vars
 static float plrX = 0, plrY = 22, plrZ = 5;
 static float plrRotFacing = 0;
 static float plrSpeedHoriz = 0, plrSpeedVert = 0;
@@ -420,11 +427,14 @@ static void sceneInit(void)
     memcpy(vboCornerIndex, idxArray, 6*sizeof(u16));
     //castle
     loadObj("/3ds/ctrmagic/castle.obj", &vboCastle, &vboCastleLength);
+    //player
+    loadObj("/3ds/ctrmagic/ybody.obj", &vboPlr, &vboPlrLength);
 
     //load textures from files
     loadTexture(&texKitten, "/3ds/ctrmagic/grass.bin", 64, 64);
     loadTexture(&texLava, "/3ds/ctrmagic/lava512.bin", 512, 512);
     loadTexture(&texBrick, "/3ds/ctrmagic/brick.bin", 128, 64);
+    loadTexture(&texPlr, "/3ds/ctrmagic/ybody.bin", 256, 256);
 
     // Configure the first fragment shading substage to blend the texture color with
     // the vertex color (calculated by the vertex shader using a lighting algorithm)
@@ -480,20 +490,19 @@ static void sceneRender(int eye)
 
     //update modelview
     Mtx_Identity(&modelView);
-    Mtx_Scale(&modelView, 0.5f, 0.5f, 0.5f);
-
+    Mtx_Scale(&modelView, 0.1f, 0.1f, 0.1f);
     C3D_Mtx rotateMtx;
     Mtx_FromQuat(&rotateMtx, plrRot);
     Mtx_Multiply(&modelView, &rotateMtx, &modelView);
     Mtx_Translate(&modelView, 0, 0.25f, 0, false);
     Mtx_Translate(&modelView, plrX, plrY, plrZ, false);
     C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_modelView, &modelView);
-    //draw player cube
-    C3D_TexBind(0, &texBrick);
+    //draw player
+    C3D_TexBind(0, &texPlr);
     BufInfo_Init(&bufInfo);
-    BufInfo_Add(&bufInfo, vboOrigin, sizeof(vertex), 3, 0x210);
+    BufInfo_Add(&bufInfo, vboPlr, sizeof(vertex), 3, 0x210);
     C3D_SetBufInfo(&bufInfo);
-    C3D_DrawArrays(GPU_TRIANGLES, 0, cube_vertex_list_count);
+    C3D_DrawArrays(GPU_TRIANGLES, 0, vboPlrLength);
 
     //update modelview
     Mtx_Identity(&modelView);
@@ -523,6 +532,7 @@ static void sceneExit(void)
     C3D_TexDelete(&texKitten);
     C3D_TexDelete(&texLava);
     C3D_TexDelete(&texBrick);
+    C3D_TexDelete(&texPlr);
 
     // Free the VBO
     linearFree(vboTerrain);
@@ -531,6 +541,7 @@ static void sceneExit(void)
     linearFree(vboCorner);
     linearFree(vboCornerIndex);
     linearFree(vboCastle);
+    linearFree(vboPlr);
 
     // Free the shader program
     shaderProgramFree(&program);
