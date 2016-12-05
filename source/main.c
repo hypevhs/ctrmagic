@@ -314,7 +314,8 @@ static void terrainGen() {
     linearFree(heightMap);
 }
 
-static void loadCastleObj() {
+//allocates and stores obj model into **vbo and stores the length in *u32
+static void loadObj(char* filename, vertex** vbo, u32* length) {
     tinyobj_attrib_t attrib;
     tinyobj_shape_t* shapes = NULL;
     size_t num_shapes;
@@ -323,7 +324,7 @@ static void loadCastleObj() {
 
     Handle fsHandle;
     u32 fsSize;
-    fsopen(&fsHandle, &fsSize, "/3ds/ctrmagic/castle.obj");
+    fsopen(&fsHandle, &fsSize, filename);
     char* data = linearAlloc(sizeof(char) * fsSize);
     fsread(fsHandle, fsSize, data);
 
@@ -340,11 +341,11 @@ static void loadCastleObj() {
     //attrib.num_face_num_verts is actual number of triangles to draw
 
     //if using drawArrays, num_faces is vbo length. elseif using drawElements, it's the length of your index array
-    vboCastleLength = attrib.num_faces;
-    vboCastle = (vertex*)linearAlloc(sizeof(vertex) * vboCastleLength);
+    *length = attrib.num_faces;
+    *vbo = (vertex*)linearAlloc(sizeof(vertex) * (*length));
 
     //for each indexer in the indexArray
-    for (int ii = 0; ii < vboCastleLength; ii++) {
+    for (int ii = 0; ii < *length; ii++) {
         tinyobj_vertex_index_t v0 = attrib.faces[ii];
         //get the vertex pos/norm/etc of wherever that indexer points to
         float x = attrib.vertices[v0.v_idx * 3 + 0];
@@ -356,7 +357,7 @@ static void loadCastleObj() {
         float vny = attrib.normals[v0.vn_idx * 3 + 1];
         float vnz = attrib.normals[v0.vn_idx * 3 + 2];
         //and add it to vbo
-        vboCastle[ii] = (vertex){{x,y,z}, {vtx,vty}, {vnx,vny,vnz}};
+        (*vbo)[ii] = (vertex){{x,y,z}, {vtx,vty}, {vnx,vny,vnz}};
     }
 }
 
@@ -418,7 +419,7 @@ static void sceneInit(void)
     u16 idxArray[] = { 0,1,2,3,4,5 };
     memcpy(vboCornerIndex, idxArray, 6*sizeof(u16));
     //castle
-    loadCastleObj();
+    loadObj("/3ds/ctrmagic/castle.obj", &vboCastle, &vboCastleLength);
 
     //load textures from files
     loadTexture(&texKitten, "/3ds/ctrmagic/grass.bin", 64, 64);
