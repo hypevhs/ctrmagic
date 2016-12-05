@@ -2,6 +2,11 @@
 # converts png files into rgba8 format (though it's really just ABGR ABGR ABGR)
 # that crazy morton encoding is only within 8x8 blocks of pixels, and then the
 # order of *those* blocks is how you'd expect: reading order.
+# WARNING! the png files must have 3 planes, no greyscale, and no alpha channel.
+# example = {
+#  'bitdepth': 8, 'interlace': 0, 'planes': 3,
+#  'greyscale': False, 'alpha': False, 'gamma': 0.45455, 'size': (256, 256)
+# }
 
 import png
 import struct
@@ -39,8 +44,8 @@ def tex2png():
     fo.close()
 
 def png2tex():
-    fi = open("assets/brick.png", "rb")
-    fo = open("assets/brick.bin", "wb")
+    fi = open("ybody.png", "rb")
+    fo = open("ybody.bin", "wb")
     reader = png.Reader(fi)
     pObj = reader.read()
     w = pObj[0]
