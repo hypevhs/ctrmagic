@@ -129,13 +129,13 @@ static C3D_Tex texBrick;
 static C3D_Tex texPlr;
 static C3D_Tex texPlrWheel;
 //state vars
-static float plrX = 0, plrY = 22, plrZ = 5;
+static float plrX = 0, plrY = 22, plrZ = 20;
 static float plrRotFacing = 0;
 static float plrSpeedHoriz = 0, plrSpeedVert = 0;
 static bool plrAerial = true;
-static C3D_FQuat plrRot = {{0,0,0,1}};
+static C3D_FQuat plrRot = {{0,0,0,0}};
 #define PLRHACCEL 0.001
-#define PLRMAXSPEED 0.2
+#define PLRMAXSPEED 0.3
 #define PLRGRAVITY 0.004
 static float camFollowDist = 3;
 unsigned long long startTime;
@@ -701,7 +701,7 @@ void updateScene() {
     float terrainUnderYou = pointOnTerrain(plrXNext, plrZNext);
 
     //if less than terrain point, snap to terrain
-    if (plrYNext < terrainUnderYou) {
+    if (plrYNext - 0.01 < terrainUnderYou) {
         plrYNext = terrainUnderYou;
         plrAerial = false;
     } else {
