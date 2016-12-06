@@ -44,8 +44,8 @@ def tex2png():
     fo.close()
 
 def png2tex():
-    fi = open("ybody.png", "rb")
-    fo = open("ybody.bin", "wb")
+    fi = open("assets/ywheels.png", "rb")
+    fo = open("assets/ywheels.bin", "wb")
     reader = png.Reader(fi)
     pObj = reader.read()
     w = pObj[0]
