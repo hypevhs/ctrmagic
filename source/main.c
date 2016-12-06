@@ -667,6 +667,7 @@ void updateScene() {
 
     //rotate player
     plrRotFacing += howFarX * 0.05;
+    plrRotFacing = fmodf(plrRotFacing, 2*M_PI);
 
     //update speeds
     plrSpeedVert -= PLRGRAVITY;
@@ -709,17 +710,18 @@ void updateScene() {
         float norm[3];
         normalOnTerrain(norm, plrX, plrZ);
         C3D_FVec src = FVec3_New(0, 0, 0);
-        C3D_FVec dst = FVec3_New(norm[0], norm[1], norm[2]);
+        C3D_FVec nrm = FVec3_New(norm[0], norm[1], norm[2]);
         C3D_FVec fwd = FVec3_New(0,0,-1);
         C3D_FVec up = FVec3_New(0,1,0);
-        plrRot = Quat_LookAt(src, dst, fwd, up);
-        plrRot = Quat_Rotate(plrRot, dst, -plrRotFacing, true); //rotate about normal to face camera-forward
+        C3D_FQuat look = Quat_LookAt(src, nrm, fwd, up);
+        plrRot = Quat_Identity();
+        plrRot = Quat_Multiply(plrRot, look);
+        float ang = -plrRotFacing + FVec3_Dot(nrm, FVec3_New(1,0,0));
+        plrRot = Quat_Rotate(plrRot, nrm, ang, true); //rotate about normal to face camera-forward
 
         //fix model: rot 90 about X, then 180 about Y
-        C3D_FVec xPlus = FVec3_New(1,0,0);
-        C3D_FVec yPlus = FVec3_New(0,1,0);
-        plrRot = Quat_Rotate(plrRot, xPlus, -M_PI_2, false);
-        plrRot = Quat_Rotate(plrRot, yPlus, M_PI, false);
+        plrRot = Quat_Rotate(plrRot, FVec3_New(1,0,0), -M_PI_2, false);
+        plrRot = Quat_Rotate(plrRot, FVec3_New(0,1,0), M_PI, false);
     }
 }
 
