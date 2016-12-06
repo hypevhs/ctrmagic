@@ -532,6 +532,7 @@ static void sceneRender(int eye)
     Mtx_Translate(&modelView, 0, vboTerrain[LANDSCAPE_VERTEX_COUNT / 2].position[1], 0, true);
     Mtx_Translate(&modelView, 0, -0.3, 0, true);
     Mtx_Scale(&modelView, 4,4,4);
+    Mtx_RotateY(&modelView, -M_PI_2, false);
     C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_modelView, &modelView);
     //draw castle
     C3D_TexBind(0, &texBrick);
