@@ -89,7 +89,7 @@ static const vertex cube_vertex_list[] =
 #define LANDSCAPE_INDEX_COUNT (((LANDSCAPE_TILE_SIZE+1)*LANDSCAPE_TILE_SIZE*2) + ((LANDSCAPE_TILE_SIZE-1)*2))
 //2 extra verts between each row are added for degenerate tris
 #define LANDSCAPE_VERTEX_COUNT ((LANDSCAPE_TILE_SIZE+1)*(LANDSCAPE_TILE_SIZE+1))
-#define LANDSCAPE_SCALE_HORIZ 4
+#define LANDSCAPE_SCALE_HORIZ 6
 #define LANDSCAPE_TEXTURE_SCALE 2
 
 static DVLB_s* vshader_dvlb;
@@ -496,11 +496,10 @@ static void sceneRender(int eye)
 
     //update modelview
     Mtx_Identity(&modelView);
-    Mtx_Scale(&modelView, 0.05f, 0.05f, 0.05f);
+    Mtx_Scale(&modelView, 0.07f, 0.07f, 0.07f);
     C3D_Mtx rotateMtx;
     Mtx_FromQuat(&rotateMtx, plrRot);
     Mtx_Multiply(&modelView, &rotateMtx, &modelView);
-    Mtx_Translate(&modelView, 0, 0.25f, 0, false);
     Mtx_Translate(&modelView, plrX, plrY, plrZ, false);
     C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_modelView, &modelView);
     //draw player
@@ -529,6 +528,8 @@ static void sceneRender(int eye)
     //update modelview
     Mtx_Identity(&modelView);
     Mtx_Translate(&modelView, 0, vboTerrain[LANDSCAPE_VERTEX_COUNT / 2].position[1], 0, true);
+    Mtx_Translate(&modelView, 0, -0.3, 0, true);
+    Mtx_Scale(&modelView, 4,4,4);
     C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_modelView, &modelView);
     //draw castle
     C3D_TexBind(0, &texBrick);
