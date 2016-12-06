@@ -118,11 +118,14 @@ static vertex* vboCastle;
 static u32 vboCastleLength;
 static vertex* vboPlr;
 static u32 vboPlrLength;
+static vertex* vboPlrWheel;
+static u32 vboPlrWheelLength;
 //textures
 static C3D_Tex texKitten;
 static C3D_Tex texLava;
 static C3D_Tex texBrick;
 static C3D_Tex texPlr;
+static C3D_Tex texPlrWheel;
 //state vars
 static float plrX = 0, plrY = 22, plrZ = 5;
 static float plrRotFacing = 0;
@@ -429,12 +432,14 @@ static void sceneInit(void)
     loadObj("/3ds/ctrmagic/castle.obj", &vboCastle, &vboCastleLength);
     //player
     loadObj("/3ds/ctrmagic/ybody.obj", &vboPlr, &vboPlrLength);
+    loadObj("/3ds/ctrmagic/ywheels.obj", &vboPlrWheel, &vboPlrWheelLength);
 
     //load textures from files
     loadTexture(&texKitten, "/3ds/ctrmagic/grass.bin", 64, 64);
     loadTexture(&texLava, "/3ds/ctrmagic/lava512.bin", 512, 512);
     loadTexture(&texBrick, "/3ds/ctrmagic/brick.bin", 128, 64);
     loadTexture(&texPlr, "/3ds/ctrmagic/ybody.bin", 256, 256);
+    loadTexture(&texPlrWheel, "/3ds/ctrmagic/ywheels.bin", 128, 128);
 
     // Configure the first fragment shading substage to blend the texture color with
     // the vertex color (calculated by the vertex shader using a lighting algorithm)
@@ -503,6 +508,12 @@ static void sceneRender(int eye)
     BufInfo_Add(&bufInfo, vboPlr, sizeof(vertex), 3, 0x210);
     C3D_SetBufInfo(&bufInfo);
     C3D_DrawArrays(GPU_TRIANGLES, 0, vboPlrLength);
+    //and wheels, with the same modelview
+    C3D_TexBind(0, &texPlrWheel);
+    BufInfo_Init(&bufInfo);
+    BufInfo_Add(&bufInfo, vboPlrWheel, sizeof(vertex), 3, 0x210);
+    C3D_SetBufInfo(&bufInfo);
+    C3D_DrawArrays(GPU_TRIANGLES, 0, vboPlrWheelLength);
 
     //update modelview
     Mtx_Identity(&modelView);
@@ -533,6 +544,7 @@ static void sceneExit(void)
     C3D_TexDelete(&texLava);
     C3D_TexDelete(&texBrick);
     C3D_TexDelete(&texPlr);
+    C3D_TexDelete(&texPlrWheel);
 
     // Free the VBO
     linearFree(vboTerrain);
@@ -542,6 +554,7 @@ static void sceneExit(void)
     linearFree(vboCornerIndex);
     linearFree(vboCastle);
     linearFree(vboPlr);
+    linearFree(vboPlrWheel);
 
     // Free the shader program
     shaderProgramFree(&program);
