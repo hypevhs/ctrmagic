@@ -92,6 +92,8 @@ static const vertex cube_vertex_list[] =
 #define LANDSCAPE_SCALE_HORIZ 6
 #define LANDSCAPE_TEXTURE_SCALE 2
 
+static PrintConsole consoleMain, consoleBottom;
+
 static DVLB_s* vshader_dvlb;
 static shaderProgram_s program;
 static int uLoc_projection, uLoc_modelView;
@@ -137,6 +139,7 @@ static C3D_FQuat plrRot = {{0,0,0,1}};
 #define PLRGRAVITY 0.004
 static float camFollowDist = 3;
 unsigned long long startTime;
+static int frameCounter = 0;
 
 //produce a unit vector
 void normalize(float v[3]) {
@@ -742,7 +745,11 @@ int main()
     gfxSet3D(true);
 
     // Init the console
-    consoleInit(GFX_BOTTOM, NULL);
+    consoleInit(GFX_BOTTOM, &consoleMain);
+    consoleInit(GFX_BOTTOM, &consoleBottom);
+    consoleSetWindow(&consoleMain,   0,  0, 40, 28);
+    consoleSetWindow(&consoleBottom, 0, 28, 40,  1);
+    consoleSelect(&consoleMain);
     printf("========================================");
     printf("=             Castle Scene             =");
     printf("========================================");
@@ -769,6 +776,7 @@ int main()
     {
         gfxSwapBuffersGpu(); // Swap the framebuffers BEFORE waiting for vblank!!!
         gspWaitForVBlank();  // wait for VBlank
+        struct timeval clockBegin; gettimeofday(&clockBegin, NULL);
         musicTick(); //update music
         hidScanInput();
 
@@ -798,6 +806,16 @@ int main()
 
         // Flush the framebuffers out of the data cache (not necessary with pure GPU rendering)
         //gfxFlushBuffers();
+
+        struct timeval clockEnd; gettimeofday(&clockEnd, NULL);
+        double clockSec = (double)(clockEnd.tv_usec - clockBegin.tv_usec) / 1000000 + (double)(clockEnd.tv_sec - clockBegin.tv_sec);
+        consoleSelect(&consoleBottom);
+        if (frameCounter % 30 == 0) {
+            printf("\nmstime: %8.3f", clockSec*1000.0f);
+        }
+        consoleSelect(&consoleMain);
+
+        frameCounter++;
     }
 
     // Deinitialize the scene
