@@ -135,6 +135,7 @@ static C3D_FQuat plrRot = {{0,0,0,1}};
 #define PLRHACCEL 0.001
 #define PLRMAXSPEED 0.2
 #define PLRGRAVITY 0.004
+static float camFollowDist = 3;
 unsigned long long startTime;
 
 //produce a unit vector
@@ -462,7 +463,7 @@ static void sceneRender(int eye)
     //for global camera
     C3D_Mtx camera;
     Mtx_Identity(&camera);
-    Mtx_Translate(&camera, 0, 0, -3, true); //follow dist
+    Mtx_Translate(&camera, 0, 0, -camFollowDist, true); //follow dist
     Mtx_RotateX(&camera, M_PI / 8, true); //follow angle
     Mtx_RotateY(&camera, plrRotFacing, true);
     Mtx_Translate(&camera, -plrX, -plrY, -plrZ, true);
@@ -656,6 +657,13 @@ void updateScene() {
     if (analog.dy < 20 && analog.dy > -20) analog.dy = 0;
     float howFarX = analog.dx / 160.0;
     //float howFarY = analog.dy / 160.0; //no idea why its max and min is this
+
+    if (kHeld & KEY_DUP) {
+        camFollowDist -= 0.01;
+    }
+    if (kHeld & KEY_DDOWN) {
+        camFollowDist += 0.01;
+    }
 
     if (kDown & KEY_L) {
         float norm[3];
