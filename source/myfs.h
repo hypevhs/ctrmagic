@@ -5,13 +5,10 @@
 #include <stdio.h>
 #include <string.h>
 
-FS_Archive sdmcArchive;
-
 Result fsinit();
 
-//returns size
-void fsopen(Handle* outFileHandle, u32* outSize, char* subPath);
+FILE* fsopen(char* subPath, u32* outSize);
 
-Result fsread(Handle fileHandle, u32 size, char* intoBuf);
+void fsread(FILE* fileHandle, u32 size, char* intoBuf);
 
 #endif /*MYFS_H*/

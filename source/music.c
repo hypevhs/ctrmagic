@@ -15,9 +15,9 @@ Result musicinit() {
     musicCtx = xmp_create_context();
 
     //read module file
-    Handle fsHandle;
+    FILE* fsHandle;
     u32 fsSize;
-    fsopen(&fsHandle, &fsSize, "/3ds/ctrmagic/fury.lagon.mod");
+    fsHandle = fsopen("/3ds/ctrmagic/fury.lagon.mod", &fsSize);
     moduleBuffer = linearAlloc(sizeof(char) * fsSize);
     fsread(fsHandle, fsSize, moduleBuffer);
 

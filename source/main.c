@@ -336,9 +336,8 @@ static void loadObj(char* filename, vertex** vbo, u32* length) {
     tinyobj_material_t* materials = NULL;
     size_t num_materials;
 
-    Handle fsHandle;
     u32 fsSize;
-    fsopen(&fsHandle, &fsSize, filename);
+    FILE* fsHandle = fsopen(filename, &fsSize);
     char* data = linearAlloc(sizeof(char) * fsSize);
     fsread(fsHandle, fsSize, data);
 
@@ -376,11 +375,11 @@ static void loadObj(char* filename, vertex** vbo, u32* length) {
 }
 
 static void loadTexture(C3D_Tex* texStore, char* path, int sizeW, int sizeH) {
-    Handle fsHandle;
+    FILE* fsHandle;
     u32 fsSize;
 
     //load the texture from file
-    fsopen(&fsHandle, &fsSize, path);
+    fsHandle = fsopen(path, &fsSize);
     char* buf = linearAlloc(sizeof(char) * fsSize);
     fsread(fsHandle, fsSize, buf);
     //load it into c3d
@@ -755,7 +754,6 @@ int main()
     printf("========================================");
 
     //init some other junk
-    fsinit();
     musicinit();
     startTime = msTime();
 
