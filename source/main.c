@@ -138,6 +138,7 @@ static C3D_FQuat plrRot = {{0,0,0,0}};
 #define PLRMAXSPEED 0.3
 #define PLRGRAVITY 0.004
 static float camFollowDist = 3;
+static float camAngle = M_PI / 8;
 unsigned long long startTime;
 static int frameCounter = 0;
 
@@ -466,7 +467,7 @@ static void sceneRender(int eye)
     C3D_Mtx camera;
     Mtx_Identity(&camera);
     Mtx_Translate(&camera, 0, 0, -camFollowDist, true); //follow dist
-    Mtx_RotateX(&camera, M_PI / 8, true); //follow angle
+    Mtx_RotateX(&camera, camAngle, true); //follow angle
     Mtx_RotateY(&camera, plrRotFacing, true);
     Mtx_Translate(&camera, -plrX, -plrY, -plrZ, true);
     Mtx_Multiply(&projection, &projection, &camera);
@@ -662,11 +663,16 @@ void updateScene() {
     float howFarX = analog.dx / 160.0;
     //float howFarY = analog.dy / 160.0; //no idea why its max and min is this
 
-    if (kHeld & KEY_DUP) {
-        camFollowDist -= 0.01;
-    }
-    if (kHeld & KEY_DDOWN) {
-        camFollowDist += 0.01;
+    if (kHeld & KEY_R) {
+        if (kHeld & KEY_DUP)
+            camFollowDist -= 0.07;
+        if (kHeld & KEY_DDOWN)
+            camFollowDist += 0.07;
+    } else {
+        if (kHeld & KEY_DUP)
+            camAngle += 0.02;
+        if (kHeld & KEY_DDOWN)
+            camAngle -= 0.02;
     }
 
     if (kDown & KEY_L) {
@@ -687,6 +693,9 @@ void updateScene() {
         plrSpeedHoriz += PLRHACCEL;
     } else {
         plrSpeedHoriz -= PLRHACCEL;
+    }
+    if (kHeld & KEY_B) {
+        plrSpeedHoriz *= 0.95f;
     }
     plrSpeedHoriz = fmaxf(0, fminf(PLRMAXSPEED, plrSpeedHoriz));
 
