@@ -95,6 +95,7 @@ static const vertex cube_vertex_list[] =
 
 static PrintConsole consoleMain, consoleBottom;
 
+static C3D_RenderBuf rbLeft, rbRight;
 static DVLB_s* vshader_dvlb;
 static shaderProgram_s program;
 static int uLoc_projection, uLoc_modelView;
@@ -140,9 +141,10 @@ static C3D_FQuat plrRot = {{0,0,0,0}};
 #define PLRGRAVITY 0.004
 static float camFollowDist = 3;
 static float camAngle = M_PI / 8;
+static float camAngleY = 0;
 unsigned long long startTime;
 static int frameCounter = 0;
-static float dirLight = 0;
+static float dirLight = -M_PI_2; //sun directly overhead
 
 //produce a unit vector
 void normalize(float v[3]) {
@@ -470,7 +472,7 @@ static void sceneRender(int eye)
     Mtx_Identity(&camera);
     Mtx_Translate(&camera, 0, 0, -camFollowDist, true); //follow dist
     Mtx_RotateX(&camera, camAngle, true); //follow angle
-    Mtx_RotateY(&camera, plrRotFacing, true);
+    Mtx_RotateY(&camera, plrRotFacing + camAngleY, true);
     Mtx_Translate(&camera, -plrX, -plrY, -plrZ, true);
     Mtx_Multiply(&projection, &projection, &camera);
 
@@ -681,18 +683,19 @@ void updateScene() {
             camFollowDist -= 0.07;
         if (kHeld & KEY_DDOWN)
             camFollowDist += 0.07;
+        if (kHeld & KEY_DLEFT)
+            camAngleY += 0.02;
+        if (kHeld & KEY_DRIGHT)
+            camAngleY -= 0.02;
     } else {
         if (kHeld & KEY_DUP)
             camAngle += 0.02;
         if (kHeld & KEY_DDOWN)
             camAngle -= 0.02;
-    }
-
-    if (kHeld & KEY_DRIGHT) {
-        dirLight += 0.01;
-    }
-    if (kHeld & KEY_DLEFT) {
-        dirLight -= 0.01;
+        if (kHeld & KEY_DRIGHT)
+            dirLight += 0.01;
+        if (kHeld & KEY_DLEFT)
+            dirLight -= 0.01;
     }
 
     if (kDown & KEY_L) {
@@ -816,7 +819,6 @@ int main()
     startTime = msTime();
 
     // Initialize the renderbuffer
-    static C3D_RenderBuf rbLeft, rbRight;
     C3D_RenderBufInit(&rbLeft, 240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
     C3D_RenderBufInit(&rbRight, 240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
     rbLeft.clearColor = CLEAR_COLOR_DAY;
