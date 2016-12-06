@@ -11,7 +11,8 @@
 #include <assert.h>
 #include "diamondsquare.h"
 
-#define CLEAR_COLOR 0x68B0D8FF
+#define CLEAR_COLOR_DAY 0x68B0D8FF
+#define CLEAR_COLOR_NIT 0x0A0411FF
 
 #define DISPLAY_TRANSFER_FLAGS \
     (GX_TRANSFER_FLIP_VERT(0) | GX_TRANSFER_OUT_TILED(0) | GX_TRANSFER_RAW_COPY(0) | \
@@ -102,7 +103,7 @@ static C3D_Mtx projection;
 static C3D_Mtx material =
 {
     { //order is ? B G R
-    { { 0.0f, 0.3f, 0.3f, 0.3f } }, // Ambient
+    { { 0.0f, 0.1f, 0.1f, 0.1f } }, // Ambient
     { { 0.0f, 0.7f, 0.7f, 0.7f } }, // Diffuse
     { { 0.0f, 0.1f, 0.1f, 0.1f } }, // Specular
     { { 1.0f, 0.0f, 0.0f, 0.0f } }, // Emission
@@ -141,6 +142,7 @@ static float camFollowDist = 3;
 static float camAngle = M_PI / 8;
 unsigned long long startTime;
 static int frameCounter = 0;
+static float dirLight = 0;
 
 //produce a unit vector
 void normalize(float v[3]) {
@@ -472,10 +474,21 @@ static void sceneRender(int eye)
     Mtx_Translate(&camera, -plrX, -plrY, -plrZ, true);
     Mtx_Multiply(&projection, &projection, &camera);
 
+    //no diffuse when nighttime
+    float amt = (sinf(dirLight) * 3);
+    if (amt > 1) { amt = 1; }
+    if (amt <-1) { amt =-1; }
+    amt += 1;
+    amt /= 2;
+    amt = 1 - amt;
+    material.r[1].z = 0.7 * amt;
+    material.r[1].y = 0.7 * amt;
+    material.r[1].x = 0.7 * amt;
+
     // Update the uniforms
     C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_projection,   &projection);
     C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_material,     &material);
-    float lightVec[3] = { -2,-1,-2 };
+    float lightVec[3] = { cosf(dirLight),sinf(dirLight), -0.5 };
     normalize(lightVec);
     C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightVec,     lightVec[0], lightVec[1], lightVec[2], 1337.0f);
     C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightHalfVec, lightVec[0], lightVec[1], lightVec[2], 1337.0f);
@@ -675,6 +688,13 @@ void updateScene() {
             camAngle -= 0.02;
     }
 
+    if (kHeld & KEY_DRIGHT) {
+        dirLight += 0.01;
+    }
+    if (kHeld & KEY_DLEFT) {
+        dirLight -= 0.01;
+    }
+
     if (kDown & KEY_L) {
         float norm[3];
         normalOnTerrain(norm, plrX, plrZ);
@@ -746,6 +766,34 @@ void updateScene() {
     }
 }
 
+void updateSkyColor(C3D_RenderBuf *rbLeft, C3D_RenderBuf *rbRight) {
+    float amt = (sinf(dirLight) * 3);
+    if (amt > 1) { amt = 1; }
+    if (amt <-1) { amt =-1; }
+    amt += 1;
+    amt /= 2;
+
+    float dR = ((CLEAR_COLOR_DAY >> 24) & 0xFF) / (float)0xFF; //0.0 to 1.0
+    float dG = ((CLEAR_COLOR_DAY >> 16) & 0xFF) / (float)0xFF;
+    float dB = ((CLEAR_COLOR_DAY >> 8 ) & 0xFF) / (float)0xFF;
+
+    float nR = ((CLEAR_COLOR_NIT >> 24) & 0xFF) / (float)0xFF;
+    float nG = ((CLEAR_COLOR_NIT >> 16) & 0xFF) / (float)0xFF;
+    float nB = ((CLEAR_COLOR_NIT >> 8 ) & 0xFF) / (float)0xFF;
+
+    float lR = lerp(dR, nR, amt);
+    float lG = lerp(dG, nG, amt);
+    float lB = lerp(dB, nB, amt);
+
+    u8 fR = (u8)(lR * 0xFF);
+    u8 fG = (u8)(lG * 0xFF);
+    u8 fB = (u8)(lB * 0xFF);
+
+    u32 finalColor = (fR << 24) | (fG << 16) | (fB << 8) | 0xFF;
+    rbLeft->clearColor = finalColor;
+    rbRight->clearColor = finalColor;
+}
+
 int main()
 {
     // Initialize graphics
@@ -771,8 +819,8 @@ int main()
     static C3D_RenderBuf rbLeft, rbRight;
     C3D_RenderBufInit(&rbLeft, 240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
     C3D_RenderBufInit(&rbRight, 240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
-    rbLeft.clearColor = CLEAR_COLOR;
-    rbRight.clearColor = CLEAR_COLOR;
+    rbLeft.clearColor = CLEAR_COLOR_DAY;
+    rbRight.clearColor = CLEAR_COLOR_DAY;
     C3D_RenderBufClear(&rbLeft);
     C3D_RenderBufClear(&rbRight);
 
@@ -794,6 +842,9 @@ int main()
             break; // break in order to return to hbmenu
 
         updateScene();
+
+        //get clear colors
+        updateSkyColor(&rbLeft, &rbRight);
 
         // Render the scene twice
         C3D_RenderBufBind(&rbLeft);
